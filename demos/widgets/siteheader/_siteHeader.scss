@@ -1,0 +1,10 @@
+.siteheader {
+	width: 100%;
+	height: 200px;
+	background-color: black;
+}
+.sthdr {
+	&-title {
+		color: white;
+	}
+}

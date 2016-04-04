@@ -1,6 +1,9 @@
 # nimblecss
 This library is a WIP. Will update description when it's ready.
 
+## Description
+A dynamic CSS loader that scans the page for data attributes and loads CSS modules as they are required. Suitable for large web apps that require a fast initial loading time (mainly above the fold), while loading subsequent CSS modules asynchronously and concurrently.
+
 ## Demos
 To view working demos, run `gulp webserver-for-dev` and in the browser navigate to "http://localhost:8080/demos/" and open the html files.
 You will need to have done an `npm install` first and have NodeJS installed.

@@ -1,0 +1,23 @@
+/**
+  * Should be used on every widget that has it's css loaded in dynamically.
+  * Then each widget should use mixin "cssload-show" to show the widget as soon as it's styles are loaded.
+  * Please note that using @extend '.cssload-show' won't work because these styles would end up being added to common.css which is statically loaded in the <head>.
+  * Additional styles needed (other than visibility: hidden) because child elements will still be visible if parent is not.
+  */
+
+.cssload-hide {
+    visibility: hidden;
+
+    // ensures children are also not visible
+    position: absolute !important;
+    height: 1px; width: 1px;
+    overflow: hidden;
+
+    // If JS is not enabled, this class should not do anything, as the styles in the noscript tag will be loaded all in one big css file
+    .no-js & {
+        visibility: visible;
+        position: static !important;
+        height: auto; width: auto;
+        overflow: visible;
+    }
+}

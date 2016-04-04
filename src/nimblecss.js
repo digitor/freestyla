@@ -1,11 +1,192 @@
 "use strict";
 
-(function () {
+(function (loadCSS, onloadCSS) {
 	var SELF
       , nimbleCSS
       , NS = "nimbleCSS"
+      , clsLoading = "cssload-hide"
+      , instances = []  // there should only really be 1 instance, but we give each public function a unique instance so we can store variables for each
+      , $doc = $(document);    
 
+    /**
+     * @description Fetches a nimblecss instance, using a UID.
+     * @param uid (string) - Unique Identifier for the instance.
+     * @return (object/null) - The instance object or null if not found.
+     */
+    function getInstance(uid) {
+        var instance;
+        for(var i=0; i<instances.length; i++) {
+            instance = instances[i];
+            if(instance.uid === uid) return instance;
+        }
+
+        console.warn(NS, "Couldn't find an instance with UID " + uid);
+        return null;
+    }
     
+    // Ensures that the temp widgets (if there are multiple) are placed in order in the DOM (same order as they are specified in the query string), as this can be inportant with all there base styles.
+    function sortTempWidgetOrder(uid, useTempWg, widgetName, cssFile) {
+        var inst = getInstance(uid);
+
+        if (!inst.tempQueryList || inst.tempQueryList.length <= 1) return;
+
+        // records the order that the widgets should be in as a data attribute
+        if (useTempWg) {
+            //console.log("cssFile", cssFile)
+            $('[href="' + cssFile + '"]').attr('data-order', inst.tempQueryList.indexOf(widgetName));
+            inst.tempWgCount++;
+        }
+
+        // once all temp widgets have loaded, reorder them
+        if (inst.tempWgCount === inst.tempQueryList.length) {
+            var $links = $('[href*="css/min/TEMP_"]').detach()
+              , $thisLink
+              , linkCount = inst.tempQueryList.length
+              , dataInd;
+            
+            while (linkCount > 0) {
+
+                $links.each(function () {
+                    $thisLink = $(this);
+                    dataInd = parseInt($thisLink.attr("data-order"));
+
+                    if (dataInd === linkCount-1) {
+                        $("body").prepend($thisLink);
+                        linkCount--;
+                    }
+                });
+            }
+        }
+    }
+
+
+    // Calls the config callback functions if all conditions pass
+    function loopCB(uid, wgName, cnf, allowAll) {
+        var inst = getInstance(uid);
+
+        // if already loaded don't do anything
+        if (!allowAll && cnf.loaded === true) return false;
+
+        // if a jQuery element is supplied, we check if it has any parents with the 'cssload-hide' class and do nothing until then
+        if (cnf.$el && cnf.$el.hasClass("cssload-hide") ||
+            cnf.$el && cnf.$el.closest(".cssload-hide").length) {
+            if (inst.notYetVisibleWgList.indexOf(cnf) === -1) inst.notYetVisibleWgList.push(cnf);
+            return false;
+        }
+
+        
+        _.forEach(cnf.cb, function (cb) {
+            //_.throttle(cb, 300);
+            cb(wgName);
+        });
+
+        return true;
+    }
+
+
+    // check if any widgets have registered callbacks from calling 'utils.wgCssLoaded'
+    function triggerRegisteredCallbacks(uid, wgName) {
+        var inst = getInstance(uid);
+
+        var wgCSSLoaded = window.nimbleCSS.glb.wgCSSLoaded;
+
+        
+
+        _.forEach(wgCSSLoaded, function (cnf) {
+
+            //if (inst.notYetVisibleWgList.length > 1)
+                //console.log("inst.notYetVisibleWgList.length", inst.notYetVisibleWgList)
+
+            // must be reverse array because of splice
+            var cnf2;
+            for (var i = inst.notYetVisibleWgList.length - 1; i > -1; i--) {
+                cnf2 = inst.notYetVisibleWgList[i];
+                var loaded = loopCB(uid, wgName, cnf2);
+                if (loaded) {
+                    inst.notYetVisibleWgList.splice(i, 1);
+                    cnf2.loaded = true;
+                }
+            }
+
+            if (!cnf.loaded) {
+                if (wgName === cnf.wgName || cnf.wgName === "*") {
+                    var loaded = loopCB(uid, wgName, cnf);
+                    if (loaded) cnf.loaded = true;
+                }
+            } else if (cnf.wgName === "*") {
+                loopCB(uid, wgName, cnf, true);
+            }
+        });
+
+        // add loaded widgets to the list, so late subscriptions can still return callbacks immediately
+        var matches = _.where(wgCSSLoaded, { wgName: wgName });
+        if (matches.length === 0) {
+            //console.log("late", wgName);
+            wgCSSLoaded.push({
+                wgName: wgName
+                , loaded: true
+                , cb: []
+            });
+        }
+    }
+
+
+    // start loading the CSS
+    function startCSSLoading(uid, widgetName, $thisWg, useTempWg, successCB) {
+        var inst = getInstance(uid);
+
+        var cssFile = nimbleCSS.glb.buildDirCSS + "widgets/" + widgetName + ".css";
+        if (useTempWg) {
+            cssFile = nimbleCSS.glb.buildDirCSS + "TEMP_" + widgetName + ".css";
+        } else {
+
+            var matches = _.where(window.nimbleCSS.glb.wgCSSLoaded, { wgName: widgetName, loaded: true });
+            if (matches.length) {
+
+                //cssload-hide already removed in removeCriticalCssLoad
+            
+                triggerRegisteredCallbacks(uid, widgetName);
+                $doc.trigger("widget-css-loaded", { wgName: widgetName });
+
+                if (successCB) successCB(widgetName);
+                return;
+            }
+        }
+
+        // if already in critical css, just trigger the registered callbacks and events
+
+        var ss = loadCSS(cssFile, $wgCss);
+
+        onloadCSS(ss, function () {
+            
+            var count = 0;
+            var checkWidgetStylesLoaded = function () {
+                
+                var wgCSSOk = !$thisWg || $thisWg.eq(0).css("visibility") === "visible"; // $('link[href*="/' + widgetName + '.css"]').length > 0;//
+
+                if (wgCSSOk) {
+
+                    sortTempWidgetOrder(uid, useTempWg, widgetName, cssFile);
+
+                    // remove all instances' css hide class, so they become visible
+                    $("." + widgetName).removeClass("cssload-hide");
+
+                    // tell the world what happened
+                    triggerRegisteredCallbacks(uid, widgetName);
+                    $doc.trigger("widget-css-loaded", { wgName: widgetName });
+                    if (successCB) successCB(widgetName);
+
+                } else if (count < 120) { // limit to 30 attempts (36 seconds)
+                    count++;
+                    setTimeout(checkWidgetStylesLoaded, 300);
+                }
+            }
+
+            // iterate until widget visible
+            checkWidgetStylesLoaded();
+        });
+    }
+
     nimbleCSS = {
 
         // need to figure out how to set these nicely
@@ -21,181 +202,33 @@
 
         /**
          * @description Loads CSS by widget class name (if it exists on the page). Alternatively, you can load it with data attribute `data-load-wg="mywidgetname"` anywhere on the page for a single widget.
-         * $ (object) - jQuery
-         * _ (object) - LoDash
-         * priorityWgList (array of strings) optional - list of widget names to load before others.
+         * @param $ (object) - jQuery instance
+         * @param _ (object) - LoDash instance
+         * @param priorityWgList (array of strings) optional - list of widget names to load before others.
+         * @return (string) - The UID for the instance.
          */
-        , onDemandCSS: function ($, _, priorityWgList) {
+        , start: function ($, _, priorityWgList) {
+
+            var uid = SELF.getUID("instance")
+              , inst = { uid: uid };
+
+            instances.push(inst);
+            
 
             var $wrongAttr = $('[data-wg-load]');
             if ($wrongAttr.length !== 0)
                 console.warn(NS, "onDemandCSS()", "Whoops! Looks like you've used 'data-wg-load' somewhere instead of 'data-load-wg' as an attribute", $wrongAttr);
 
             //var D_WG_LIST = "widget-list"
-            var $doc = $(document)
-              , $wgCss = $("#widgetcss")[0]
-              , tempQueryList = SELF.getTempWidgetQueryList()
-              , tempWgCount = 0;
+            var $wgCss = $("#widgetcss")[0];
 
-            
-            // Ensures that the temp widgets (if there are multiple) are placed in order in the DOM (same order as they are specified in the query string), as this can be inportant with all there base styles.
-            var sortTempWidgetOrder = function (useTempWg, widgetName, cssFile) {
-                //console.log("tempQueryList", tempQueryList, useTempWg);
-
-                if (!tempQueryList || tempQueryList.length <= 1) return;
-
-                // records the order that the widgets should be in as a data attribute
-                if (useTempWg) {
-                    //console.log("cssFile", cssFile)
-                    $('[href="' + cssFile + '"]').attr('data-order', tempQueryList.indexOf(widgetName));
-                    tempWgCount++;
-                }
-
-                // once all temp widgets have loaded, reorder them
-                if (tempWgCount === tempQueryList.length) {
-                    var $links = $('[href*="css/min/TEMP_"]').detach()
-                      , $thisLink
-                      , linkCount = tempQueryList.length
-                      , dataInd;
-                    
-                    while (linkCount > 0) {
-
-                        $links.each(function () {
-                            $thisLink = $(this);
-                            dataInd = parseInt($thisLink.attr("data-order"));
-
-                            if (dataInd === linkCount-1) {
-                                $("body").prepend($thisLink);
-                                linkCount--;
-                            }
-                        });
-                    }
-                }
-            }
+            inst.tempWgCount = 0;
+            inst.tempQueryList = SELF.getTempWidgetQueryList();
+            inst.notYetVisibleWgList = [];
 
 
-            var notYetVisibleWgList = [];
 
-            // check if any widgets have registered callbacks from calling 'utils.wgCssLoaded'
-            var triggerRegisteredCallbacks = function (wgName) {
-                //console.log("triggerRegisteredCallbacks test", wgName)
 
-                var wgCSSLoaded = window.nimbleCSS.glb.wgCSSLoaded;
-
-                var loopCB = function (cnf, allowAll) {
-
-                    // if already loaded don't do anything
-                    if (!allowAll && cnf.loaded === true) return false;
-
-                    // if a jQuery element is supplied, we check if it has any parents with the 'cssload-hide' class and do nothing until then
-                    if (cnf.$el && cnf.$el.hasClass("cssload-hide") ||
-                        cnf.$el && cnf.$el.closest(".cssload-hide").length) {
-                        if (notYetVisibleWgList.indexOf(cnf) === -1) notYetVisibleWgList.push(cnf);
-                        return false;
-                    }
-
-                    
-                    _.forEach(cnf.cb, function (cb) {
-                        //_.throttle(cb, 300);
-                        cb(wgName);
-                    });
-
-                    return true;
-                }
-
-                _.forEach(wgCSSLoaded, function (cnf) {
-
-                    //if (notYetVisibleWgList.length > 1)
-                        //console.log("notYetVisibleWgList.length", notYetVisibleWgList)
-
-                    // must be reverse array because of splice
-                    var cnf2;
-                    for (var i = notYetVisibleWgList.length - 1; i > -1; i--) {
-                        cnf2 = notYetVisibleWgList[i];
-                        var loaded = loopCB(cnf2);
-                        if (loaded) {
-                            notYetVisibleWgList.splice(i, 1);
-                            cnf2.loaded = true;
-                        }
-                    }
-
-                    if (!cnf.loaded) {
-                        if (wgName === cnf.wgName || cnf.wgName === "*") {
-                            var loaded = loopCB(cnf);
-                            if (loaded) cnf.loaded = true;
-                        }
-                    } else if (cnf.wgName === "*") {
-                        loopCB(cnf, true);
-                    }
-                });
-
-                // add loaded widgets to the list, so late subscriptions can still return callbacks immediately
-                var matches = _.where(wgCSSLoaded, { wgName: wgName });
-                if (matches.length === 0) {
-                    //console.log("late", wgName);
-                    wgCSSLoaded.push({
-                        wgName: wgName
-                        , loaded: true
-                        , cb: []
-                    });
-                }
-            }
-
-            // start loading the CSS
-            var startCSSLoading = function (widgetName, $thisWg, useTempWg, successCB) {
-                
-
-                var cssFile = nimbleCSS.glb.buildDirCSS + "widgets/" + widgetName + ".css";
-                if (useTempWg) {
-                    cssFile = nimbleCSS.glb.buildDirCSS + "TEMP_" + widgetName + ".css";
-                } else {
-
-                    var matches = _.where(window.nimbleCSS.glb.wgCSSLoaded, { wgName: widgetName, loaded: true });
-                    if (matches.length) {
-
-                        //cssload-hide already removed in removeCriticalCssLoad
-                    
-                        triggerRegisteredCallbacks(widgetName);
-                        $doc.trigger("widget-css-loaded", { wgName: widgetName });
-
-                        if (successCB) successCB(widgetName);
-                        return;
-                    }
-                }
-
-                // if already in critical css, just trigger the registered callbacks and events
-
-                var ss = loadCSS(cssFile, $wgCss);
-
-                onloadCSS(ss, function () {
-                    
-                    var count = 0;
-                    var checkWidgetStylesLoaded = function () {
-                        
-                        var wgCSSOk = !$thisWg || $thisWg.eq(0).css("visibility") === "visible"; // $('link[href*="/' + widgetName + '.css"]').length > 0;//
-
-                        if (wgCSSOk) {
-
-                            sortTempWidgetOrder(useTempWg, widgetName, cssFile);
-
-                            // remove all instances' css hide class, so they become visible
-                            $("." + widgetName).removeClass("cssload-hide");
-
-                            // tell the world what happened
-                            triggerRegisteredCallbacks(widgetName);
-                            $doc.trigger("widget-css-loaded", { wgName: widgetName });
-                            if (successCB) successCB(widgetName);
-
-                        } else if (count < 120) { // limit to 30 attempts (36 seconds)
-                            count++;
-                            setTimeout(checkWidgetStylesLoaded, 300);
-                        }
-                    }
-
-                    // iterate until widget visible
-                    checkWidgetStylesLoaded();
-                });
-            }
 
             
             
@@ -214,7 +247,7 @@
                 });
 
                 $thisWg = $("." + widgetName);
-                var useTempWg = tempQueryList && tempQueryList.indexOf(widgetName) !== -1;
+                var useTempWg = inst.tempQueryList && inst.tempQueryList.indexOf(widgetName) !== -1;
 
                 // check if widget exists on the page first
                 if ($thisWg.length !== 0) {
@@ -248,7 +281,7 @@
 
             var loadNonPriority = function () {
                 _.forEach(nonPriorityList, function (item) {
-                    startCSSLoading(item.name, item.$wg, item.useTempWg);
+                    startCSSLoading(uid, item.name, item.$wg, item.useTempWg);
                 });
             }
 
@@ -260,13 +293,15 @@
 
             // loads priority widgets first
             _.forEach(priorityList, function (item) {
-                startCSSLoading(item.name, item.$wg, item.useTempWg, function () {
+                startCSSLoading(uid, item.name, item.$wg, item.useTempWg, function () {
                     loadedCount++;
 
                     // once all priority widgets loaded, load the rest
                     if (loadedCount === priorityList.length) loadNonPriority();
                 });
             });
+
+            return uid;
         },
 
         removeCriticalCssLoad: function () {
@@ -447,5 +482,4 @@
     else                                window.nimbleCSS = window.nimblecss = window.nimcss = window.nipplecss = window.nippleCSS = nimbleCSS;
     
     SELF = nimbleCSS;
-})();
-
+})(loadCSS, onloadCSS);
