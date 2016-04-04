@@ -1,5 +1,4 @@
 var gulp = require('gulp')
-  , autoprefixer = require('gulp-autoprefixer')
   , gutil = require('gulp-util')
   , jshint = require('gulp-jshint')
   , stylish = require('jshint-stylish')

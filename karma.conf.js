@@ -15,6 +15,7 @@ module.exports = function(config) {
     frameworks: ['jasmine'],
     files: [
       'node_modules/jquery/dist/jquery.min.js',
+      'node_modules/lodash/dist/lodash.min.js',
       'src/lib/subtrees/loadcss/onloadCSS.js',
       'src/lib/subtrees/loadcss/loadCSS.js',
       'src/*.js',
