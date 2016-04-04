@@ -11,7 +11,9 @@ var gulp = require('gulp')
   , uglify = require('gulp-uglify')
   , rename = require('gulp-rename')
   , sass = require('gulp-sass')
-  , hlp = require('src/_helpers')
+  , autoprefixer = require('gulp-autoprefixer')
+  , flatten = require('gulp-flatten')
+  , hlp = require('./src/_helpers')
 
 var webserverStream
   , forceKill = false
@@ -46,7 +48,7 @@ gulp.task('minjs', function() {
 
 gulp.task('styles', function() {
 
-    return gulp.src("demos/app/app")
+    return gulp.src("demos/app/*.scss")
       //.pipe(sourcemaps.init())
       .pipe(sass({ style: 'compressed' }))
         .on('error', function (err) {
@@ -55,7 +57,8 @@ gulp.task('styles', function() {
         .pipe(flatten())
         .pipe(autoprefixer({browsers: autoPrefixerBrowsers}))
         //.pipe(sourcemaps.write('./maps'))
-        .pipe(gulp.dest("dist/nimblecss.min.css"))
+        .pipe(rename('nimblecss.min.css'))
+        .pipe(gulp.dest("dist/"))
 })
 
 gulp.task('lint', function () {
