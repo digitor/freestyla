@@ -1,12 +1,28 @@
 "use strict";
 
-(function (loadCSS, onloadCSS) {
+(function () {
 	var SELF
       , freeStyler
       , NS = "freeStyler"
       , clsLoading = "cssload-hide"
-      , instances = []  // there should only really be 1 instance, but we give each public function a unique instance so we can store variables for each
-      , $doc = $(document);    
+      , instances = [];  // there should only really be 1 instance, but we give each public function a unique instance so we can store variables for each
+
+    // defines browser dependent variables, so unit tests don't error
+    var loadCSS, onloadCSS, $doc;
+    if(typeof window !== "undefined") {
+        loadCSS = window.loadCSS;
+        onloadCSS = window.onloadCSS;
+        $doc = $(document);
+    }
+
+    /**
+     * @description Gets a unique string, with an optional prefix that can be useful for human readability.
+     * @param pref (string) optional - A prefix string for the unique id.
+     * @return (string) The unique id.
+     */
+    function getUID(pref) {
+        return (pref || "") + Math.random().toString().replace(".", "");
+    }
 
     /**
      * @description Fetches a freestyler instance, using a UID.
@@ -22,6 +38,21 @@
 
         console.warn(NS, "Couldn't find an instance with UID " + uid);
         return null;
+    }
+
+    /**
+     * @description Creates a new freestyler instance, with a unique id.
+     * @param rtnInst (bool) - Whether or not to return the instance, rather than just the id.
+     * @return (string/object) - The uid or instance object.
+     */
+    function createNewInstance(rtnInst) {
+        var uid = getUID("instance")
+          , inst = { uid: uid };
+
+        instances.push(inst);
+
+        if(rtnInst) return inst;
+        return uid;
     }
     
     // Ensures that the temp widgets (if there are multiple) are placed in order in the DOM (same order as they are specified in the query string), as this can be inportant with all there base styles.
@@ -84,7 +115,7 @@
     }
 
 
-    // check if any widgets have registered callbacks from calling 'utils.wgCssLoaded'
+    // check if any widgets have registered callbacks from calling 'utils.freeLoaded'
     function triggerRegisteredCallbacks(uid, wgName) {
         var inst = getInstance(uid);
 
@@ -98,10 +129,10 @@
                 //console.log("inst.notYetVisibleWgList.length", inst.notYetVisibleWgList)
 
             // must be reverse array because of splice
-            var cnf2;
+            var cnf2, loaded;
             for (var i = inst.notYetVisibleWgList.length - 1; i > -1; i--) {
                 cnf2 = inst.notYetVisibleWgList[i];
-                var loaded = loopCB(uid, wgName, cnf2);
+                loaded = loopCB(uid, wgName, cnf2);
                 if (loaded) {
                     inst.notYetVisibleWgList.splice(i, 1);
                     cnf2.loaded = true;
@@ -110,7 +141,7 @@
 
             if (!cnf.loaded) {
                 if (wgName === cnf.wgName || cnf.wgName === "*") {
-                    var loaded = loopCB(uid, wgName, cnf);
+                    loaded = loopCB(uid, wgName, cnf);
                     if (loaded) cnf.loaded = true;
                 }
             } else if (cnf.wgName === "*") {
@@ -189,16 +220,17 @@
 
     freeStyler = {
 
-        // need to figure out how to set these nicely
-        glb: {
-            wgCSSLoaded: []
-            , buildDirCSS: "/dist/css/"
-            , widgetNames: []
-            , dynamicCSS: true
-        }
-
         // set to true if you want warnings to not show up in console (useful for tests, as they can be a bit annoying)
-        ,suppressWarnings: false
+        suppressWarnings: false
+
+        // should be called before calling 'start'
+        , prepare: function(wgCSSLoaded, buildDirCSS, widgetNames, dynamicCSS) {
+            
+            SELF.glb.wgCSSLoaded = wgCSSLoaded;
+            SELF.glb.buildDirCSS = buildDirCSS;
+            SELF.glb.widgetNames = widgetNames;
+            SELF.glb.dynamicCSS = dynamicCSS;
+        }
 
         /**
          * @description Loads CSS by widget class name (if it exists on the page). Alternatively, you can load it with data attribute `data-load-wg="mywidgetname"` anywhere on the page for a single widget.
@@ -209,11 +241,8 @@
          */
         , start: function ($, _, priorityWgList) {
 
-            var uid = SELF.getUID("instance")
-              , inst = { uid: uid };
-
-            instances.push(inst);
-            
+            var inst = createNewInstance(true)
+              , uid = inst.uid;
 
             var $wrongAttr = $('[data-wg-load]');
             if ($wrongAttr.length !== 0)
@@ -228,10 +257,6 @@
 
 
 
-
-
-            
-            
             var widgetsList = window.freeStyler.glb.widgetNames
               , $thisWg
               , sel
@@ -345,7 +370,7 @@
             }
 
             if (!singleCB) {
-                SELF.wgCssLoaded(ns, cb);
+                SELF.freeLoaded(ns, cb);
                 return;
             }
 
@@ -357,7 +382,7 @@
             }
 
             
-            SELF.wgCssLoaded(ns, function (wgName) {
+            SELF.freeLoaded(ns, function (wgName) {
                 count++;
                 //console.log("handleWgCSSLoad", count, total)
                 if (count === total) cb(wgName);
@@ -365,7 +390,7 @@
         }
 
         // Listen for a particular widget's CSS loaded status
-        , wgCssLoaded: function (ns, cb) {
+        , freeLoaded: function (ns, cb) {
 
             if (!window.freeStyler.glb.dynamicCSS) {
                 cb();
@@ -405,7 +430,7 @@
                 // allows you to pass just a jQuery element, or an object with jQuery element and namespace
                 var $el = ns.$el || ns;
                 if (!$el.length) {
-                    console.warn("utils -> wgCssLoaded", "You tried to pass an element, but length was zero.");
+                    console.warn("utils -> freeLoaded", "You tried to pass an element, but length was zero.");
                 }
 
                 var namespace = ns.ns || "*";
@@ -434,10 +459,6 @@
             });
         }
 
-        
-        , getUID: function(pref) {
-            return (pref || "") + Math.random().toString().replace(".", "");
-        }
 
         , getTempWidgetQueryList: function () {
             var queryArr = window.location.href.split("?")
@@ -469,11 +490,15 @@
 
         , testable: {
         	getUID: getUID
+            , createNewInstance: createNewInstance
+            , getInstance: getInstance
+            , triggerRegisteredCallbacks: triggerRegisteredCallbacks
         }
 
         // maybe useful variables
         , vars: {
             NS: NS
+            , clsLoading: clsLoading
         }
     }
 
@@ -482,4 +507,4 @@
     else                                window.freeStyler = window.freestyler = freeStyler;
     
     SELF = freeStyler;
-})(loadCSS, onloadCSS);
+})();

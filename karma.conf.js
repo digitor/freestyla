@@ -11,7 +11,7 @@ module.exports = function(config) {
   if(!isTravis) browsers.push('Chrome', (isWin ? 'IE' : "Safari"));
 
   config.set({
-  	browsers: browsers,
+  	browsers: ["Chrome"],// browsers,
     frameworks: ['jasmine'],
     files: [
       'node_modules/jquery/dist/jquery.min.js',

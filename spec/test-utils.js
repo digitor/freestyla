@@ -45,6 +45,12 @@
             return uid;
         }
 
+        , cleanUpGlobals: function() {
+            if(window.freeStyler && window.freeStyler.glb) {
+                
+                window.freeStyler.glb.wgCSSLoaded = [];
+            }
+        }
 
     }
 	

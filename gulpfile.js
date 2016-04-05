@@ -62,7 +62,7 @@ gulp.task('styles', function() {
 })
 
 gulp.task('lint', function () {
-  return gulp.src(['**/*.js', '!node_modules{,/**}']).pipe(jshint()).pipe(jshint.reporter(stylish))
+  return gulp.src(['**/*.js', '!**/node_modules{,/**}', "!src/lib/**/*"]).pipe(jshint()).pipe(jshint.reporter(stylish))
 })
 
 gulp.task('webserver-for-dev', function() {
@@ -96,6 +96,7 @@ gulp.task('unit-tests', function() {
 
 
 gulp.task("test", function(done) {
+  forceKill = true;
 	runSequence(['webserver-for-test', 'unit-tests', 'lint'], 'e2e-tests', done);
 });
 
