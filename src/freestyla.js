@@ -92,7 +92,7 @@
 
 
     // Calls the config callback functions if all conditions pass
-    function callRegisteredCallback(uid, wgName, cnf, allowAll) {
+    function callRegisteredCBs(uid, wgName, cnf, allowAll) {
         var inst = getInstance(uid);
 
         // if already loaded don't do anything
@@ -130,7 +130,7 @@
             var cnf2, loaded;
             for (var i = inst.notYetVisibleWgList.length - 1; i > -1; i--) {
                 cnf2 = inst.notYetVisibleWgList[i];
-                loaded = callRegisteredCallback(uid, wgName, cnf2);
+                loaded = callRegisteredCBs(uid, wgName, cnf2);
                 if (loaded) {
                     inst.notYetVisibleWgList.splice(i, 1);
                     cnf2.loaded = true;
@@ -139,11 +139,11 @@
 
             if (!cnf.loaded) {
                 if (wgName === cnf.wgName || cnf.wgName === "*") {
-                    loaded = callRegisteredCallback(uid, wgName, cnf);
+                    loaded = callRegisteredCBs(uid, wgName, cnf);
                     if (loaded) cnf.loaded = true;
                 }
             } else if (cnf.wgName === "*") {
-                callRegisteredCallback(uid, wgName, cnf, true);
+                callRegisteredCBs(uid, wgName, cnf, true);
             }
         });
 
@@ -490,7 +490,7 @@
         	getUID: getUID
             , createNewInstance: createNewInstance
             , getInstance: getInstance
-            , callRegisteredCallback: callRegisteredCallback
+            , callRegisteredCBs: callRegisteredCBs
             , triggerRegisteredCallbacks: triggerRegisteredCallbacks
         }
 

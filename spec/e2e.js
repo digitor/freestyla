@@ -13,9 +13,9 @@ beforeEach(function() {
 	resetGlobals();
 });
 
-describe("callRegisteredCallback", function() {
+describe("callRegisteredCBs", function() {
 
-	var fun = window.freeStyla.testable.callRegisteredCallback
+	var fun = window.freeStyla.testable.callRegisteredCBs
 
 	it("should successfully call a single callback in a widget config", function (done) {
 		
