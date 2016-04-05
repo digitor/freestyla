@@ -38,11 +38,11 @@ var autoPrefixerBrowsers = [
 ]
 
 gulp.task('minjs', function() {
-  return gulp.src('src/freestyler.js')
+  return gulp.src('src/freestyla.js')
     .pipe(uglify({
     	mangle: false
     }))
-    .pipe(rename('freestyler.min.js'))
+    .pipe(rename('freestyla.min.js'))
     .pipe(gulp.dest('dist/'));
 });
 
@@ -57,7 +57,7 @@ gulp.task('styles', function() {
         .pipe(flatten())
         .pipe(autoprefixer({browsers: autoPrefixerBrowsers}))
         //.pipe(sourcemaps.write('./maps'))
-        .pipe(rename('freestyler.min.css'))
+        .pipe(rename('freestyla.min.css'))
         .pipe(gulp.dest("dist/"))
 })
 

@@ -3,7 +3,7 @@
 // These utility functions are just intended to help with e2e and unit tests
 
 (function () {
-	var SELF, testUtils, NS = "freeStyler";
+	var SELF, testUtils, NS = "freeStyla";
 
     testUtils = {
         createEl: function(id, type, cls, skipTest, container) {
@@ -46,9 +46,9 @@
         }
 
         , cleanUpGlobals: function() {
-            if(window.freeStyler && window.freeStyler.glb) {
+            if(window.freeStyla && window.freeStyla.glb) {
                 
-                window.freeStyler.glb.wgCSSLoaded = [];
+                window.freeStyla.glb.wgCSSLoaded = [];
             }
         }
 

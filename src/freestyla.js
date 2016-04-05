@@ -2,8 +2,8 @@
 
 (function () {
 	var SELF
-      , freeStyler
-      , NS = "freeStyler"
+      , freeStyla
+      , NS = "freeStyla"
       , clsLoading = "cssload-hide"
       , instances = [];  // there should only really be 1 instance, but we give each public function a unique instance so we can store variables for each
 
@@ -25,7 +25,7 @@
     }
 
     /**
-     * @description Fetches a freestyler instance, using a UID.
+     * @description Fetches a freestyla instance, using a UID.
      * @param uid (string) - Unique Identifier for the instance.
      * @return (object/null) - The instance object or null if not found.
      */
@@ -41,7 +41,7 @@
     }
 
     /**
-     * @description Creates a new freestyler instance, with a unique id.
+     * @description Creates a new freestyla instance, with a unique id.
      * @param rtnInst (bool) - Whether or not to return the instance, rather than just the id.
      * @return (string/object) - The uid or instance object.
      */
@@ -119,7 +119,7 @@
     function triggerRegisteredCallbacks(uid, wgName) {
         var inst = getInstance(uid);
 
-        var wgCSSLoaded = window.freeStyler.glb.wgCSSLoaded;
+        var wgCSSLoaded = window.freeStyla.glb.wgCSSLoaded;
 
         
 
@@ -166,12 +166,12 @@
     function startCSSLoading(uid, widgetName, $thisWg, useTempWg, successCB) {
         var inst = getInstance(uid);
 
-        var cssFile = freeStyler.glb.buildDirCSS + "widgets/" + widgetName + ".css";
+        var cssFile = freeStyla.glb.buildDirCSS + "widgets/" + widgetName + ".css";
         if (useTempWg) {
-            cssFile = freeStyler.glb.buildDirCSS + "TEMP_" + widgetName + ".css";
+            cssFile = freeStyla.glb.buildDirCSS + "TEMP_" + widgetName + ".css";
         } else {
 
-            var matches = _.where(window.freeStyler.glb.wgCSSLoaded, { wgName: widgetName, loaded: true });
+            var matches = _.where(window.freeStyla.glb.wgCSSLoaded, { wgName: widgetName, loaded: true });
             if (matches.length) {
 
                 //cssload-hide already removed in removeCriticalCssLoad
@@ -218,7 +218,7 @@
         });
     }
 
-    freeStyler = {
+    freeStyla = {
 
         // set to true if you want warnings to not show up in console (useful for tests, as they can be a bit annoying)
         suppressWarnings: false
@@ -257,7 +257,7 @@
 
 
 
-            var widgetsList = window.freeStyler.glb.widgetNames
+            var widgetsList = window.freeStyla.glb.widgetNames
               , $thisWg
               , sel
               , wgLoadList = [];
@@ -332,7 +332,7 @@
         removeCriticalCssLoad: function () {
             var $thisWg;
 
-            _.forEach(window.freeStyler.glb.wgCSSLoaded, function (item) {
+            _.forEach(window.freeStyla.glb.wgCSSLoaded, function (item) {
 
                 if (item.loaded && item.wgName !== "*") {
 
@@ -364,7 +364,7 @@
                 return;
             }
 
-            if (!window.freeStyler.glb.dynamicCSS) {
+            if (!window.freeStyla.glb.dynamicCSS) {
                 cb();
                 return;
             }
@@ -392,7 +392,7 @@
         // Listen for a particular widget's CSS loaded status
         , freeLoaded: function (ns, cb) {
 
-            if (!window.freeStyler.glb.dynamicCSS) {
+            if (!window.freeStyla.glb.dynamicCSS) {
                 cb();
                 return;
             }
@@ -401,8 +401,8 @@
             if (typeof ns === "string") list = [ns];
             else if (_.isArray(ns))     list = ns;
 
-            // registers the callbacks to 'window.freeStyler.glb.wgCSSLoaded', so they will be called when css is loaded
-            var wgCSSLoaded = window.freeStyler.glb.wgCSSLoaded;
+            // registers the callbacks to 'window.freeStyla.glb.wgCSSLoaded', so they will be called when css is loaded
+            var wgCSSLoaded = window.freeStyla.glb.wgCSSLoaded;
 
             var addNSArray = function (list, isNewCB) {
                 _.forEach(list, function (wgName) {
@@ -503,8 +503,8 @@
     }
 
     // exposes library for browser and Node-based code (such as unit tests)
-    if(typeof window === "undefined")   module.exports = freeStyler;
-    else                                window.freeStyler = window.freestyler = freeStyler;
+    if(typeof window === "undefined")   module.exports = freeStyla;
+    else                                window.freeStyla = window.freestyla = freeStyla;
     
-    SELF = freeStyler;
+    SELF = freeStyla;
 })();
