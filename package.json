@@ -1,11 +1,11 @@
 {
-  "name": "nimblecss",
+  "name": "freeStyler",
   "version": "1.0.0",
   "description": "Dynamic on-demand CSS loader, which looks for data attributes on the page to determine which CSS files to load. Depends heavily on JS library 'LoadCSS' for asynchronous CSS loading.",
-  "main": "src/nimblecss.js",
+  "main": "src/freestyler.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/digitor/nimblecss.git"
+    "url": "git+https://github.com/digitor/freestyler.git"
   },
   "keywords": [
     "dynamic",
@@ -17,9 +17,9 @@
   "author": "Jim Doyle",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/digitor/nimblecss/issues"
+    "url": "https://github.com/digitor/freestyler/issues"
   },
-  "homepage": "https://github.com/digitor/nimblecss#readme",
+  "homepage": "https://github.com/digitor/freestyler#readme",
   "devDependencies": {
     "gulp": "3.9.1",
     "gulp-autoprefixer": "^3.1.0",

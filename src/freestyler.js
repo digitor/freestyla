@@ -2,14 +2,14 @@
 
 (function (loadCSS, onloadCSS) {
 	var SELF
-      , nimbleCSS
-      , NS = "nimbleCSS"
+      , freeStyler
+      , NS = "freeStyler"
       , clsLoading = "cssload-hide"
       , instances = []  // there should only really be 1 instance, but we give each public function a unique instance so we can store variables for each
       , $doc = $(document);    
 
     /**
-     * @description Fetches a nimblecss instance, using a UID.
+     * @description Fetches a freestyler instance, using a UID.
      * @param uid (string) - Unique Identifier for the instance.
      * @return (object/null) - The instance object or null if not found.
      */
@@ -88,7 +88,7 @@
     function triggerRegisteredCallbacks(uid, wgName) {
         var inst = getInstance(uid);
 
-        var wgCSSLoaded = window.nimbleCSS.glb.wgCSSLoaded;
+        var wgCSSLoaded = window.freeStyler.glb.wgCSSLoaded;
 
         
 
@@ -135,12 +135,12 @@
     function startCSSLoading(uid, widgetName, $thisWg, useTempWg, successCB) {
         var inst = getInstance(uid);
 
-        var cssFile = nimbleCSS.glb.buildDirCSS + "widgets/" + widgetName + ".css";
+        var cssFile = freeStyler.glb.buildDirCSS + "widgets/" + widgetName + ".css";
         if (useTempWg) {
-            cssFile = nimbleCSS.glb.buildDirCSS + "TEMP_" + widgetName + ".css";
+            cssFile = freeStyler.glb.buildDirCSS + "TEMP_" + widgetName + ".css";
         } else {
 
-            var matches = _.where(window.nimbleCSS.glb.wgCSSLoaded, { wgName: widgetName, loaded: true });
+            var matches = _.where(window.freeStyler.glb.wgCSSLoaded, { wgName: widgetName, loaded: true });
             if (matches.length) {
 
                 //cssload-hide already removed in removeCriticalCssLoad
@@ -187,7 +187,7 @@
         });
     }
 
-    nimbleCSS = {
+    freeStyler = {
 
         // need to figure out how to set these nicely
         glb: {
@@ -232,7 +232,7 @@
 
             
             
-            var widgetsList = window.nimbleCSS.glb.widgetNames
+            var widgetsList = window.freeStyler.glb.widgetNames
               , $thisWg
               , sel
               , wgLoadList = [];
@@ -307,7 +307,7 @@
         removeCriticalCssLoad: function () {
             var $thisWg;
 
-            _.forEach(window.nimbleCSS.glb.wgCSSLoaded, function (item) {
+            _.forEach(window.freeStyler.glb.wgCSSLoaded, function (item) {
 
                 if (item.loaded && item.wgName !== "*") {
 
@@ -339,7 +339,7 @@
                 return;
             }
 
-            if (!window.nimbleCSS.glb.dynamicCSS) {
+            if (!window.freeStyler.glb.dynamicCSS) {
                 cb();
                 return;
             }
@@ -367,7 +367,7 @@
         // Listen for a particular widget's CSS loaded status
         , wgCssLoaded: function (ns, cb) {
 
-            if (!window.nimbleCSS.glb.dynamicCSS) {
+            if (!window.freeStyler.glb.dynamicCSS) {
                 cb();
                 return;
             }
@@ -376,8 +376,8 @@
             if (typeof ns === "string") list = [ns];
             else if (_.isArray(ns))     list = ns;
 
-            // registers the callbacks to 'window.nimbleCSS.glb.wgCSSLoaded', so they will be called when css is loaded
-            var wgCSSLoaded = window.nimbleCSS.glb.wgCSSLoaded;
+            // registers the callbacks to 'window.freeStyler.glb.wgCSSLoaded', so they will be called when css is loaded
+            var wgCSSLoaded = window.freeStyler.glb.wgCSSLoaded;
 
             var addNSArray = function (list, isNewCB) {
                 _.forEach(list, function (wgName) {
@@ -468,7 +468,7 @@
         }
 
         , testable: {
-        	
+        	getUID: getUID
         }
 
         // maybe useful variables
@@ -478,8 +478,8 @@
     }
 
     // exposes library for browser and Node-based code (such as unit tests)
-    if(typeof window === "undefined")   module.exports = nimbleCSS;
-    else                                window.nimbleCSS = window.nimblecss = window.nimcss = window.nipplecss = window.nippleCSS = nimbleCSS;
+    if(typeof window === "undefined")   module.exports = freeStyler;
+    else                                window.freeStyler = window.freestyler = freeStyler;
     
-    SELF = nimbleCSS;
+    SELF = freeStyler;
 })(loadCSS, onloadCSS);

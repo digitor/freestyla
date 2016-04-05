@@ -1,6 +1,6 @@
 
 // some warnings can be quite irritating during tests, so we can suppress them here
-window.nimbleCSS.suppressWarnings = true;
+window.freeStyler.suppressWarnings = true;
 
 var createEl = window.testUtils.createEl
   , cleanupElement = window.testUtils.cleanupElement

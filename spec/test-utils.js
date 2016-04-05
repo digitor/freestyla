@@ -3,7 +3,7 @@
 // These utility functions are just intended to help with e2e and unit tests
 
 (function () {
-	var SELF, testUtils, NS = "nimbleCSS";
+	var SELF, testUtils, NS = "freeStyler";
 
     testUtils = {
         createEl: function(id, type, cls, skipTest, container) {
