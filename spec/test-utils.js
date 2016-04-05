@@ -45,10 +45,10 @@
             return uid;
         }
 
-        , cleanUpGlobals: function() {
+        , resetGlobals: function() {
             if(window.freeStyla && window.freeStyla.glb) {
-                
-                window.freeStyla.glb.wgCSSLoaded = [];
+                window.freeStyla.glb.widgetNames = ["SiteFooter", "SiteHeader"];
+                window.freeStyla.glb.registeredWidgets = [];
             }
         }
 

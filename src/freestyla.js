@@ -92,7 +92,7 @@
 
 
     // Calls the config callback functions if all conditions pass
-    function loopCB(uid, wgName, cnf, allowAll) {
+    function callRegisteredCallback(uid, wgName, cnf, allowAll) {
         var inst = getInstance(uid);
 
         // if already loaded don't do anything
@@ -119,11 +119,9 @@
     function triggerRegisteredCallbacks(uid, wgName) {
         var inst = getInstance(uid);
 
-        var wgCSSLoaded = window.freeStyla.glb.wgCSSLoaded;
+        var registeredWidgets = window.freeStyla.glb.registeredWidgets;
 
-        
-
-        _.forEach(wgCSSLoaded, function (cnf) {
+        _.forEach(registeredWidgets, function (cnf) {
 
             //if (inst.notYetVisibleWgList.length > 1)
                 //console.log("inst.notYetVisibleWgList.length", inst.notYetVisibleWgList)
@@ -132,7 +130,7 @@
             var cnf2, loaded;
             for (var i = inst.notYetVisibleWgList.length - 1; i > -1; i--) {
                 cnf2 = inst.notYetVisibleWgList[i];
-                loaded = loopCB(uid, wgName, cnf2);
+                loaded = callRegisteredCallback(uid, wgName, cnf2);
                 if (loaded) {
                     inst.notYetVisibleWgList.splice(i, 1);
                     cnf2.loaded = true;
@@ -141,19 +139,19 @@
 
             if (!cnf.loaded) {
                 if (wgName === cnf.wgName || cnf.wgName === "*") {
-                    loaded = loopCB(uid, wgName, cnf);
+                    loaded = callRegisteredCallback(uid, wgName, cnf);
                     if (loaded) cnf.loaded = true;
                 }
             } else if (cnf.wgName === "*") {
-                loopCB(uid, wgName, cnf, true);
+                callRegisteredCallback(uid, wgName, cnf, true);
             }
         });
 
         // add loaded widgets to the list, so late subscriptions can still return callbacks immediately
-        var matches = _.where(wgCSSLoaded, { wgName: wgName });
+        var matches = _.where(registeredWidgets, { wgName: wgName });
         if (matches.length === 0) {
             //console.log("late", wgName);
-            wgCSSLoaded.push({
+            registeredWidgets.push({
                 wgName: wgName
                 , loaded: true
                 , cb: []
@@ -171,7 +169,7 @@
             cssFile = freeStyla.glb.buildDirCSS + "TEMP_" + widgetName + ".css";
         } else {
 
-            var matches = _.where(window.freeStyla.glb.wgCSSLoaded, { wgName: widgetName, loaded: true });
+            var matches = _.where(window.freeStyla.glb.registeredWidgets, { wgName: widgetName, loaded: true });
             if (matches.length) {
 
                 //cssload-hide already removed in removeCriticalCssLoad
@@ -186,7 +184,7 @@
 
         // if already in critical css, just trigger the registered callbacks and events
 
-        var ss = loadCSS(cssFile, $wgCss);
+        var ss = loadCSS(cssFile, document.getElementById("widgetcss"));
 
         onloadCSS(ss, function () {
             
@@ -224,9 +222,10 @@
         suppressWarnings: false
 
         // should be called before calling 'start'
-        , prepare: function(wgCSSLoaded, buildDirCSS, widgetNames, dynamicCSS) {
+        , prepare: function(registeredWidgets, buildDirCSS, widgetNames, dynamicCSS) {
             
-            SELF.glb.wgCSSLoaded = wgCSSLoaded;
+            // these can probably be removed and passed in on 'start'
+            SELF.glb.registeredWidgets = registeredWidgets;
             SELF.glb.buildDirCSS = buildDirCSS;
             SELF.glb.widgetNames = widgetNames;
             SELF.glb.dynamicCSS = dynamicCSS;
@@ -249,7 +248,6 @@
                 console.warn(NS, "onDemandCSS()", "Whoops! Looks like you've used 'data-wg-load' somewhere instead of 'data-load-wg' as an attribute", $wrongAttr);
 
             //var D_WG_LIST = "widget-list"
-            var $wgCss = $("#widgetcss")[0];
 
             inst.tempWgCount = 0;
             inst.tempQueryList = SELF.getTempWidgetQueryList();
@@ -332,7 +330,7 @@
         removeCriticalCssLoad: function () {
             var $thisWg;
 
-            _.forEach(window.freeStyla.glb.wgCSSLoaded, function (item) {
+            _.forEach(window.freeStyla.glb.registeredWidgets, function (item) {
 
                 if (item.loaded && item.wgName !== "*") {
 
@@ -401,8 +399,8 @@
             if (typeof ns === "string") list = [ns];
             else if (_.isArray(ns))     list = ns;
 
-            // registers the callbacks to 'window.freeStyla.glb.wgCSSLoaded', so they will be called when css is loaded
-            var wgCSSLoaded = window.freeStyla.glb.wgCSSLoaded;
+            // registers the callbacks to 'window.freeStyla.glb.registeredWidgets', so they will be called when css is loaded
+            var registeredWidgets = window.freeStyla.glb.registeredWidgets;
 
             var addNSArray = function (list, isNewCB) {
                 _.forEach(list, function (wgName) {
@@ -411,7 +409,7 @@
                     wgName = wgName.toLowerCase();
 
 
-                    var config = _.where(wgCSSLoaded, { wgName: wgName });
+                    var config = _.where(registeredWidgets, { wgName: wgName });
 
                     // means it exists
                     if (config.length) {
@@ -438,7 +436,7 @@
                 addNSArray(_.isArray(namespace) ? namespace : [namespace], function (wgName) {
 
                     // if ns isn't a string or array we assume it is an object with a jquery element and namespace
-                    wgCSSLoaded.push({
+                    registeredWidgets.push({
                         wgName: wgName
                         , loaded: false
                         , $el: $el
@@ -451,7 +449,7 @@
 
             
             addNSArray(list, function (wgName) {
-                wgCSSLoaded.push({
+                registeredWidgets.push({
                     wgName: wgName
                     , loaded: false
                     , cb: [cb]
@@ -492,6 +490,7 @@
         	getUID: getUID
             , createNewInstance: createNewInstance
             , getInstance: getInstance
+            , callRegisteredCallback: callRegisteredCallback
             , triggerRegisteredCallbacks: triggerRegisteredCallbacks
         }
 
