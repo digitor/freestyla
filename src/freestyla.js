@@ -98,9 +98,9 @@
         // if already loaded don't do anything
         if (!allowAll && cnf.loaded === true) return false;
 
-        // if a jQuery element is supplied, we check if it has any parents with the 'cssload-hide' class and do nothing until then
-        if (cnf.$el && cnf.$el.hasClass("cssload-hide") ||
-            cnf.$el && cnf.$el.closest(".cssload-hide").length) {
+        // if a jQuery element is supplied, we check if it has any parents with the 'clsLoading' class and do nothing until then
+        if (cnf.$el && cnf.$el.hasClass(clsLoading) ||
+            cnf.$el && cnf.$el.closest("."+clsLoading).length) {
             if (inst.notYetVisibleWgList.indexOf(cnf) === -1) inst.notYetVisibleWgList.push(cnf);
             return false;
         }
@@ -172,7 +172,7 @@
             var matches = _.where(window.freeStyla.glb.registeredWidgets, { wgName: widgetName, loaded: true });
             if (matches.length) {
 
-                //cssload-hide already removed in removeCriticalCssLoad
+                //clsLoading already removed in removeCriticalCssLoad
             
                 triggerRegisteredCallbacks(uid, widgetName);
                 $doc.trigger("widget-css-loaded", { wgName: widgetName });
@@ -198,7 +198,7 @@
                     sortTempWidgetOrder(uid, useTempWg, widgetName, cssFile);
 
                     // remove all instances' css hide class, so they become visible
-                    $("." + widgetName).removeClass("cssload-hide");
+                    $("." + widgetName).removeClass(clsLoading);
 
                     // tell the world what happened
                     triggerRegisteredCallbacks(uid, widgetName);
@@ -340,7 +340,7 @@
                     if ($thisWg.length) {
                         
                         // remove all instances' css hide class, so they become visible
-                        $thisWg.removeClass("cssload-hide");
+                        $thisWg.removeClass(clsLoading);
                     }
                 }
             });
