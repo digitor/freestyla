@@ -89,8 +89,9 @@ gulp.task('webserver-for-test', function() {
 gulp.task('unit-tests', function() {
 	return gulp.src('spec/unit.js')
 		.pipe(jasmine({
-			reporter: new reporters.JUnitXmlReporter()
-			
+			//reporter: new reporters.JUnitXmlReporter()
+			//, verbose: true
+      //, includeStackTrace: true
 		}))
 })
 

@@ -31,12 +31,16 @@
      */
     function getInstance(uid) {
         var instance;
+
+        // if only 1 instance exists, you can omit the uid
+        if(!uid && instances.length === 1) return instances[0];
+
         for(var i=0; i<instances.length; i++) {
             instance = instances[i];
             if(instance.uid === uid) return instance;
         }
 
-        console.warn(NS, "Couldn't find an instance with UID " + uid);
+        console.warn(NS, "Couldn't find an instance with UID " + uid, "instances count: " + instances.length);
         return null;
     }
 
@@ -53,6 +57,12 @@
 
         if(rtnInst) return inst;
         return uid;
+    }
+
+    // just used for tests
+    function clearAllInstances() {
+        
+        instances = [];
     }
     
     // Ensures that the temp widgets (if there are multiple) are placed in order in the DOM (same order as they are specified in the query string), as this can be inportant with all there base styles.
@@ -236,9 +246,11 @@
          * @param $ (object) - jQuery instance
          * @param _ (object) - LoDash instance
          * @param priorityWgList (array of strings) optional - list of widget names to load before others.
+         * @param registeredWidgets (array of objects) optional - If you have css already loaded for certain widgets (such as critical above the fold ones), tell freeStyla they are already loaded by passing 
+         *  their configs like so { wgName: "nameOfWidget", loaded:true, cb:[] }
          * @return (string) - The UID for the instance.
          */
-        , start: function ($, _, priorityWgList) {
+        , start: function ($, _, priorityWgList, registeredWidgets) {
 
             var inst = createNewInstance(true)
               , uid = inst.uid;
@@ -252,6 +264,7 @@
             inst.tempWgCount = 0;
             inst.tempQueryList = SELF.getTempWidgetQueryList();
             inst.notYetVisibleWgList = [];
+            inst.registeredWidgets = registeredWidgets || [];
 
 
 
@@ -327,10 +340,14 @@
             return uid;
         },
 
-        removeCriticalCssLoad: function () {
-            var $thisWg;
+        /**
+         * @description Removes the loading state from any registered widgets that are already loaded (using class stored in 'clsLoading' variable. Call this if you've got preloaded critical CSS.
+         * @param uid (string) - the UID for the instance of freeStyla, returned when calling the 'start' method.
+         */
+        removeCriticalCssLoad: function (uid) {
+            var $thisWg, inst = getInstance(uid);
 
-            _.forEach(window.freeStyla.glb.registeredWidgets, function (item) {
+            _.forEach(inst.registeredWidgets, function (item) {
 
                 if (item.loaded && item.wgName !== "*") {
 
@@ -490,6 +507,7 @@
         	getUID: getUID
             , createNewInstance: createNewInstance
             , getInstance: getInstance
+            , clearAllInstances: clearAllInstances
             , callRegisteredCBs: callRegisteredCBs
             , triggerRegisteredCallbacks: triggerRegisteredCallbacks
         }

@@ -45,15 +45,23 @@
             return uid;
         }
 
-        , resetGlobals: function() {
-            if(window.freeStyla && window.freeStyla.glb) {
-                window.freeStyla.glb.widgetNames = ["SiteFooter", "SiteHeader"];
-                window.freeStyla.glb.registeredWidgets = [];
+        // unit tests should pass in instance of freestyla
+        , reset: function(freeStyla) {
+            
+            if(!freeStyla) freeStyla = window.freeStyla;
+            
+            freeStyla.testable.clearAllInstances();
+            if(freeStyla && freeStyla.glb) {
+                freeStyla.glb.widgetNames = ["SiteFooter", "SiteHeader"];
             }
         }
 
     }
 	
-	SELF = window.testUtils = testUtils;
+    // exposes library for browser and Node-based code (such as unit tests)
+    if(typeof window === "undefined")   module.exports = testUtils;
+    else                                window.testUtils = freeStyla;
+	
+    SELF = testUtils;
 })();
 

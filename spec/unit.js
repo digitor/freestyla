@@ -1,4 +1,10 @@
 var freeStyla = require("./../src/freestyla")
+  , testUtils = require("./test-utils")
+
+
+beforeEach(function() {
+	testUtils.reset(freeStyla);
+})
 
 describe("getUID", function() {
 	
@@ -22,19 +28,23 @@ describe("getUID", function() {
 
 describe("createNewInstance and getInstance", function() {
 	it("should create a new instance object with a unique id and then fetch it", function() {
-		var fun = freeStyla.testable.createNewInstance
-		
-		var uid = fun()
+		var uid = freeStyla.testable.createNewInstance()
 		  , inst = freeStyla.testable.getInstance(uid)
 
 		expect(inst).toBeDefined();
 		expect(inst.uid).toBe(uid);
 	})
 
+	it("should create a single new instance object and then fetch it WITHOUT a UID because there is only 1 instance", function() {
+		var uid = freeStyla.testable.createNewInstance()
+		  , inst = freeStyla.testable.getInstance() // no uid passed
+
+		expect(inst).toBeDefined();
+		expect(inst.uid).toBe(uid);
+	})
+
 	it("should create a new instance, attach a property to it, then fetch it again after a timeout and check the property exists", function(done) {
-		var fun = freeStyla.testable.createNewInstance
-		
-		var inst = fun(true)
+		var inst = freeStyla.testable.createNewInstance(true)
 		  , uid = inst.uid
 
 		inst.testProp = 10;

@@ -4,14 +4,14 @@ window.freeStyla.suppressWarnings = true;
 
 var createEl = window.testUtils.createEl
   , cleanupElement = window.testUtils.cleanupElement
-  , resetGlobals = window.testUtils.resetGlobals
+  , reset = window.testUtils.reset
   , createNewInstance = window.freeStyla.testable.createNewInstance
   , getUID = window.testUtils.getUID
   , clsLoading = window.freeStyla.vars.clsLoading
   , $doc = $(document)
 
 beforeEach(function() {
-	resetGlobals();
+	reset();
 });
 
 describe("callRegisteredCBs", function() {
@@ -115,5 +115,33 @@ describe("callRegisteredCBs", function() {
 
 		expect(isSuccess).toBe(false); // checks it was rejected
 		expect(inst.notYetVisibleWgList.indexOf(cnf)).toEqual(0) // checks it was added to the list of not yet visible widgets
+
+		cleanupElement(parentEl);
+		cleanupElement(child);
+	})
+
+	it("should reject and add the widget to the 'notYetVisibleWgList' array because the '$el' property isn't loaded yet", function() {
+
+		var el = createEl()
+
+		// set the parent state to still loading
+		el.classList.add(clsLoading)
+
+		var inst = setup(true)
+		  , wgName = "SiteHeader"
+
+		var cnf = {
+			wgName: wgName // case shouldn't matter
+			, $el: $(child)
+			, loaded: false
+			, cb:[]
+		}
+
+		var isSuccess = fun(inst.uid, wgName, cnf, false);
+
+		expect(isSuccess).toBe(false); // checks it was rejected
+		expect(inst.notYetVisibleWgList.indexOf(cnf)).toEqual(0) // checks it was added to the list of not yet visible widgets
+
+		cleanupElement(child);
 	})
 })
