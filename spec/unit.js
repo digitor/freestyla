@@ -73,4 +73,10 @@ describe("getTempWidgetQueryList", function() {
 		expect(list).toContain("sitefooter")
 		expect(list).toContain("sidebar")
 	})
+
+	it("should return falsy if expected query string param doesn't exist", function() {
+		
+		expect(fun("http://someurl.com")).toBeFalsy();
+		expect(fun("http://someurl.com?another=param")).toBeFalsy();
+	})
 })

@@ -251,35 +251,41 @@
 
         // if already in critical css, just trigger the registered callbacks and events
 
+        ensureStylesLoaded($thisWg, cssFile, function() {
+            sortTempWidgetOrder(uid, useTempWg, widgetName, cssFile);
+
+            // remove all instances' css hide class, so they become visible
+            $("." + widgetName).removeClass(clsLoading);
+
+            // tell the world what happened
+            triggerRegisteredCallbacks(uid, widgetName);
+            $doc.trigger("widget-css-loaded", { wgName: widgetName });
+            if (successCB) successCB(widgetName);
+
+        });
+    }
+
+    function ensureStylesLoaded($thisWg, cssFile, fun) {
+
         var ss = loadCSS(cssFile, document.getElementById("widgetcss"));
 
         onloadCSS(ss, function () {
             
             var count = 0;
-            var checkWidgetStylesLoaded = function () {
+            var checkLoaded = function () {
                 
                 var wgCSSOk = !$thisWg || $thisWg.eq(0).css("visibility") === "visible"; // $('link[href*="/' + widgetName + '.css"]').length > 0;//
 
                 if (wgCSSOk) {
-
-                    sortTempWidgetOrder(uid, useTempWg, widgetName, cssFile);
-
-                    // remove all instances' css hide class, so they become visible
-                    $("." + widgetName).removeClass(clsLoading);
-
-                    // tell the world what happened
-                    triggerRegisteredCallbacks(uid, widgetName);
-                    $doc.trigger("widget-css-loaded", { wgName: widgetName });
-                    if (successCB) successCB(widgetName);
-
+                    fun();
                 } else if (count < 120) { // limit to 30 attempts (36 seconds)
                     count++;
-                    setTimeout(checkWidgetStylesLoaded, 300);
+                    setTimeout(checkLoaded, 300);
                 }
             }
 
             // iterate until widget visible
-            checkWidgetStylesLoaded();
+            checkLoaded();
         });
     }
 
@@ -559,6 +565,7 @@
             , triggerUnloadedCBs: triggerUnloadedCBs
             , triggerRegisteredCallbacks: triggerRegisteredCallbacks
             , getTempWidgetQueryList: getTempWidgetQueryList
+            , ensureStylesLoaded: ensureStylesLoaded
         }
 
         // maybe useful variables

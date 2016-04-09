@@ -317,3 +317,10 @@ describe("triggerRegisteredCallbacks", function() {
         expect(inst.notYetVisibleWgList[0].wgName).toBe(wgName);
 	})
 })
+
+
+describe("ensureStylesLoaded", function() {
+	it("should load a css file that allows a widget to be visible and trigger a callback", function() {
+		// todo
+	})
+})
