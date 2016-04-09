@@ -134,7 +134,7 @@
      * @description Checks 'notYetVisibleWgList' array, removes any widgets that are loaded already and marks them as loaded.
      * @param uid (string) - Unique Identifier for the instance.
      */
-    function removeFromNotVisibleList(uid) {
+    function callNotVisibleList(uid) {
         var inst = getInstance(uid);
         
         // must be reverse array because of splice
@@ -154,12 +154,13 @@
      * @description Triggers callbacks for config if already loaded and '*' used for widget name. If not yet loaded, checks if 'callConfigCBs' returns true and marks as loaded if so.
      * @param uid (string) - Unique Identifier for the instance.
      * @param wgName (string) - Widget name to compare the config to. Likely it will come directly from the 'freeStyla.glb.registeredWidgets' array.
-     * @return (boolean) - Will be true only if 'callConfigCBs' sucesfully triggered the callbacks for the config.
+     * @return (boolean) - Will be true only if 'callConfigCBs' sucesfully triggered the callbacks for the config. Used in tests.
      */    
     function triggerUnloadedCBs(uid, wgName, cnf) {
         
         var loaded;
         if (!cnf.loaded) {
+            
             if (wgName === cnf.wgName || cnf.wgName === "*") {
                 loaded = callConfigCBs(uid, cnf);
                 if (loaded) cnf.loaded = true;
@@ -173,22 +174,29 @@
     }
 
 
-    // check if any widgets have registered callbacks from calling 'freeLoaded'
+    /**
+     * @description Tries to trigger callbacks for registered widgets, checking that are visible and loaded. If passed 'wgName' has not yet been registered, 
+        marks it as loaded so late registrations trigger callbacks immediately.
+     * @param uid (string) - Unique Identifier for the instance.
+     * @param wgName (string) - Widget name to compare the config to. Likely it will come directly from the 'freeStyla.glb.registeredWidgets' array.
+     */    
     function triggerRegisteredCallbacks(uid, wgName) {
         var inst = getInstance(uid);
 
+        // if 'notYetVisibleWgList' not yet added, adds it to instance and sets to empty
+        if(!inst.notYetVisibleWgList) inst.notYetVisibleWgList = [];
+
         var registeredWidgets = window.freeStyla.glb.registeredWidgets;
 
+        callNotVisibleList(uid);
         _.forEach(registeredWidgets, function (cnf) {
-
-            removeFromNotVisibleList(uid);
+            // triggers callbacks if not yet loaded or using a "*" for widget name
             triggerUnloadedCBs(uid, wgName, cnf);
         });
 
-        // add loaded widgets to the list, so late subscriptions can still return callbacks immediately
+        // If passed 'wgName' has not yet been registered, marks it as loaded so future late registrations trigger callbacks immediately.
         var matches = _.where(registeredWidgets, { wgName: wgName });
         if (matches.length === 0) {
-            //console.log("late", wgName);
             registeredWidgets.push({
                 wgName: wgName
                 , loaded: true
@@ -262,6 +270,8 @@
         // should be called before calling 'start'
         , prepare: function(registeredWidgets, buildDirCSS, widgetNames, dynamicCSS) {
             
+            SELF.glb = SELF.glb || {};
+
             // these can probably be removed and passed in on 'start'
             SELF.glb.registeredWidgets = registeredWidgets;
             SELF.glb.buildDirCSS = buildDirCSS;
@@ -291,7 +301,7 @@
 
             inst.tempWgCount = 0;
             inst.tempQueryList = SELF.getTempWidgetQueryList();
-            inst.notYetVisibleWgList = [];
+            
             inst.registeredWidgets = registeredWidgets || [];
 
 
@@ -537,7 +547,7 @@
             , getInstance: getInstance
             , clearAllInstances: clearAllInstances
             , callConfigCBs: callConfigCBs
-            , removeFromNotVisibleList: removeFromNotVisibleList
+            , callNotVisibleList: callNotVisibleList
             , triggerUnloadedCBs: triggerUnloadedCBs
             , triggerRegisteredCallbacks: triggerRegisteredCallbacks
         }

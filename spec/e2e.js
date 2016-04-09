@@ -118,9 +118,9 @@ describe("callConfigCBs", function() {
 })
 
 
-describe("removeFromNotVisibleList", function() {
+describe("callNotVisibleList", function() {
 	
-	var fun = window.freeStyla.testable.removeFromNotVisibleList
+	var fun = window.freeStyla.testable.callNotVisibleList
 
 	it("should check that 'notYetVisibleWgList' has item removed when 'callConfigCBs' returns true", function() {
 
@@ -175,6 +175,20 @@ describe("removeFromNotVisibleList", function() {
 
 		// expect not to be removed because already loaded
 		expect(inst.notYetVisibleWgList.length).toEqual(1)
+	})
+
+	it("should check that callbacks get called when 'callConfigCBs' returns true", function(done) {
+		var inst = createNewInstance(true);
+
+		var cnf = {
+			wgName: "SiteHeader" // case shouldn't matter
+			, loaded: false
+			, cb:[done]
+		}
+
+		inst.notYetVisibleWgList = [ cnf ];
+
+		fun(inst.uid)
 	})
 })
 
@@ -231,31 +245,75 @@ describe("triggerUnloadedCBs", function() {
 })
 
 
-xdescribe("triggerRegisteredCallbacks", function() {
+describe("triggerRegisteredCallbacks", function() {
 
 	var fun = window.freeStyla.testable.triggerRegisteredCallbacks
 
-	function setup(returnInst) {
-		var inst = createNewInstance(true);
+	it("Registers a config, marks it as loaded and triggers callbacks on it", function(done) {
 		
-		if(returnInst) return inst;
-		return inst.uid;
-	}
-
-	it("should check that 'notYetVisibleWgList' has item removed when 'callConfigCBs' is successful", function() {
-		
-		window.freeStyla.glb.registeredWidgets = [];
-
-		var inst = setup(true)
-		inst.notYetVisibleWgList = [];
-
+		var wgName = "SiteHeader";
 
 		var cnf = {
-			wgName: "SiteHeader" // case shouldn't matter
+            wgName: wgName
+            , loaded: false
+            , cb: [function(_wgName) {
+
+            	// checks the callback returns the name of the widget
+            	expect(_wgName).toBe(wgName)
+
+            	// needs a timeout to check the loaded state has been changed, because it happens after the callback is triggered
+            	setTimeout(function() {
+					expect(cnf.loaded).toBe(true)
+	            	done();
+            	}, 0)
+            }]
+        }
+
+        // Registers the widget
+        window.freeStyla.prepare([cnf]);
+
+		fun(createNewInstance(), wgName)
+	})
+
+	it("Creates a config, but doesn't register it, then after function has been called, checks it has been registered and marked as loaded", function() {
+		var wgName = "SiteHeader";
+
+		fun(createNewInstance(), wgName)
+
+		// expects it to have been added so future late registrations trigger callbacks immediately.
+
+		expect(window.freeStyla.glb.registeredWidgets.length).toEqual(1);
+
+		var firstCnf = window.freeStyla.glb.registeredWidgets[0]
+		expect(firstCnf.wgName).toBe(wgName);
+		expect(firstCnf.loaded).toBe(true);
+	})
+
+	it("Creates a config with an $el that has a parent not yet loaded and expects it to have been added to the 'notYetVisibleWgList' on the instance", function() {
+		var inst = createNewInstance(true);
+
+		var parentEl = createEl()
+		  , child = createEl(null, null, null, null, parentEl)
+
+		// set the parent state to still loading
+		parentEl.classList.add(clsLoading)
+
+		var wgName = "SiteHeader"
+
+		var cnf = {
+			wgName: wgName
 			, loaded: false
+			, $el: $(child)
 			, cb:[]
 		}
 
-		
+		// Registers the widget
+        window.freeStyla.prepare([cnf]);
+
+        fun(inst.uid, wgName)
+
+        expect(inst.notYetVisibleWgList).toBeDefined();
+        expect(inst.notYetVisibleWgList.length).toEqual(1);
+        expect(inst.notYetVisibleWgList[0].wgName).toBe(wgName);
 	})
 })
