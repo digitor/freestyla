@@ -100,6 +100,27 @@
         }
     }
 
+    /**
+     * @description Gets list of 'tempwg' widget names from the query string attached to the current url. 
+     * @param href (string) optional - Use this for unit tests.
+     * @return (array of strings) - The widget names fetched from the query string.
+     */
+    function getTempWidgetQueryList(href) {
+
+        if(!href) href = window.location.href;
+
+        var queryArr = href.split("?")
+          , queries = queryArr.length > 1 ? queryArr[1] : null
+        
+        if (!queries || queries.indexOf("tempwg") === -1) return null;
+
+        var tempQueryArr = queries.split("tempwg=")
+          , tempQuery = tempQueryArr[1].split("&")[0].replace("#","");
+
+        return tempQuery.split(",");
+    }
+
+
 
     /**
      * @description Calls the config callback functions if all conditions pass. If config isn't marked as 'loaded = true', adds to an array to call later when it becomes visible.
@@ -513,19 +534,6 @@
         }
 
 
-        , getTempWidgetQueryList: function () {
-            var queryArr = window.location.href.split("?")
-              , queries = queryArr.length > 1 ? queryArr[1] : null
-            
-            if (!queries || queries.indexOf("tempwg") === -1) return null;
-
-            var tempQueryArr = queries.split("tempwg=")
-              , tempQuery = tempQueryArr[1].split("&")[0].replace("#","");
-
-            return tempQuery.split(",");
-        }
-
-
         , checkLoadCssAttr: function ($, _, matchWgName) {
             var match = null
               , $loadCssList = $("[data-load-wg]")
@@ -550,6 +558,7 @@
             , callNotVisibleList: callNotVisibleList
             , triggerUnloadedCBs: triggerUnloadedCBs
             , triggerRegisteredCallbacks: triggerRegisteredCallbacks
+            , getTempWidgetQueryList: getTempWidgetQueryList
         }
 
         // maybe useful variables

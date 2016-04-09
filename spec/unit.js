@@ -56,3 +56,21 @@ describe("createNewInstance and getInstance", function() {
 		}, 100);
 	})
 })
+
+describe("getTempWidgetQueryList", function() {
+	var fun = freeStyla.testable.getTempWidgetQueryList
+
+	it("should get a single widget name from the query string", function() {
+		var list = fun("http://someurl.com?tempwg=siteheader")
+		expect(list.length).toEqual(1)
+		expect(list[0]).toBe("siteheader")
+	})
+
+	it("should get 3 widget names from the query string", function() {
+		var list = fun("http://someurl.com?tempwg=siteheader,sitefooter,sidebar")
+		expect(list.length).toEqual(3)
+		expect(list).toContain("siteheader")
+		expect(list).toContain("sitefooter")
+		expect(list).toContain("sidebar")
+	})
+})
