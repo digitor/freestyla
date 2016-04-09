@@ -265,7 +265,14 @@
         });
     }
 
-    function ensureStylesLoaded($thisWg, cssFile, fun) {
+
+    /**
+     * @description Checks if a CSS file has loaded, which allows the widget to be visible, then triggers a callback
+     * @param $thisWg (jQuery element) - jQuery element to check visibility on.
+     * @param cssFile (string) - Url to the CSS file to check.
+     * @param cb (function) - The callback to trigger once styles have loaded.
+     */
+    function ensureStylesLoaded($thisWg, cssFile, cb) {
 
         var ss = loadCSS(cssFile, document.getElementById("widgetcss"));
 
@@ -277,7 +284,7 @@
                 var wgCSSOk = !$thisWg || $thisWg.eq(0).css("visibility") === "visible"; // $('link[href*="/' + widgetName + '.css"]').length > 0;//
 
                 if (wgCSSOk) {
-                    fun();
+                    cb();
                 } else if (count < 120) { // limit to 30 attempts (36 seconds)
                     count++;
                     setTimeout(checkLoaded, 300);
