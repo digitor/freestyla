@@ -106,7 +106,7 @@
      * @param uid (string) - Unique Identifier for the instance.
      *
      */
-    function callRegisteredCBs(uid, cnf, allowAll) {
+    function callConfigCBs(uid, cnf, allowAll) {
         var inst = getInstance(uid);
 
         // if already loaded don't do anything
@@ -123,7 +123,6 @@
 
         var wgName = cnf.wgName;
         _.forEach(cnf.cb, function (cb) {
-            //_.throttle(cb, 300);
             cb(wgName);
         });
 
@@ -132,21 +131,45 @@
 
 
     /**
-     * @description Checks 'notYetVisibleWgList' array and removes any widgets that are loaded already.
+     * @description Checks 'notYetVisibleWgList' array, removes any widgets that are loaded already and marks them as loaded.
      * @param uid (string) - Unique Identifier for the instance.
      */
     function removeFromNotVisibleList(uid) {
+        var inst = getInstance(uid);
         
         // must be reverse array because of splice
         var cnf, loaded;
         for (var i = inst.notYetVisibleWgList.length - 1; i > -1; i--) {
             cnf = inst.notYetVisibleWgList[i];
-            loaded = callRegisteredCBs(uid, cnf);
+            loaded = callConfigCBs(uid, cnf);
             if (loaded) {
                 inst.notYetVisibleWgList.splice(i, 1);
                 cnf.loaded = true;
             }
         }
+    }
+
+    
+    /**
+     * @description Triggers callbacks for config if already loaded and '*' used for widget name. If not yet loaded, checks if 'callConfigCBs' returns true and marks as loaded if so.
+     * @param uid (string) - Unique Identifier for the instance.
+     * @param wgName (string) - Widget name to compare the config to. Likely it will come directly from the 'freeStyla.glb.registeredWidgets' array.
+     * @return (boolean) - Will be true only if 'callConfigCBs' sucesfully triggered the callbacks for the config.
+     */    
+    function triggerUnloadedCBs(uid, wgName, cnf) {
+        
+        var loaded;
+        if (!cnf.loaded) {
+            if (wgName === cnf.wgName || cnf.wgName === "*") {
+                loaded = callConfigCBs(uid, cnf);
+                if (loaded) cnf.loaded = true;
+                return loaded;
+            }
+        } else if (cnf.wgName === "*") {
+            loaded = callConfigCBs(uid, cnf, true);
+            return loaded;
+        }
+        return false;
     }
 
 
@@ -158,25 +181,8 @@
 
         _.forEach(registeredWidgets, function (cnf) {
 
-            // must be reverse array because of splice
-            var cnf2, loaded;
-            for (var i = inst.notYetVisibleWgList.length - 1; i > -1; i--) {
-                cnf2 = inst.notYetVisibleWgList[i];
-                loaded = callRegisteredCBs(uid, cnf2);
-                if (loaded) {
-                    inst.notYetVisibleWgList.splice(i, 1);
-                    cnf2.loaded = true;
-                }
-            }
-
-            if (!cnf.loaded) {
-                if (wgName === cnf.wgName || cnf.wgName === "*") {
-                    loaded = callRegisteredCBs(uid, cnf);
-                    if (loaded) cnf.loaded = true;
-                }
-            } else if (cnf.wgName === "*") {
-                callRegisteredCBs(uid, cnf, true);
-            }
+            removeFromNotVisibleList(uid);
+            triggerUnloadedCBs(uid, wgName, cnf);
         });
 
         // add loaded widgets to the list, so late subscriptions can still return callbacks immediately
@@ -530,7 +536,9 @@
             , createNewInstance: createNewInstance
             , getInstance: getInstance
             , clearAllInstances: clearAllInstances
-            , callRegisteredCBs: callRegisteredCBs
+            , callConfigCBs: callConfigCBs
+            , removeFromNotVisibleList: removeFromNotVisibleList
+            , triggerUnloadedCBs: triggerUnloadedCBs
             , triggerRegisteredCallbacks: triggerRegisteredCallbacks
         }
 

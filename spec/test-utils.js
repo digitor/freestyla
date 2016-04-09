@@ -60,7 +60,7 @@
 	
     // exposes library for browser and Node-based code (such as unit tests)
     if(typeof window === "undefined")   module.exports = testUtils;
-    else                                window.testUtils = freeStyla;
+    else                                window.testUtils = testUtils
 	
     SELF = testUtils;
 })();

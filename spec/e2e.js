@@ -4,19 +4,18 @@ window.freeStyla.suppressWarnings = true;
 
 var createEl = window.testUtils.createEl
   , cleanupElement = window.testUtils.cleanupElement
-  , reset = window.testUtils.reset
   , createNewInstance = window.freeStyla.testable.createNewInstance
   , getUID = window.testUtils.getUID
   , clsLoading = window.freeStyla.vars.clsLoading
   , $doc = $(document)
 
 beforeEach(function() {
-	reset();
+	window.testUtils.reset();
 });
 
-describe("callRegisteredCBs", function() {
+describe("callConfigCBs", function() {
 
-	var fun = window.freeStyla.testable.callRegisteredCBs
+	var fun = window.freeStyla.testable.callConfigCBs
 
 	function setup(returnInst) {
 		var inst = createNewInstance(true);
@@ -119,22 +118,144 @@ describe("callRegisteredCBs", function() {
 })
 
 
-describe("triggerRegisteredCallbacks", function() {
+describe("removeFromNotVisibleList", function() {
+	
+	var fun = window.freeStyla.testable.removeFromNotVisibleList
+
+	it("should check that 'notYetVisibleWgList' has item removed when 'callConfigCBs' returns true", function() {
+
+		var inst = createNewInstance(true);
+
+		var cnf = {
+			wgName: "SiteHeader" // case shouldn't matter
+			, loaded: false
+			, cb:[]
+		}
+
+		inst.notYetVisibleWgList = [
+			cnf
+			, {
+				wgName: "otherWidget1"
+				, loaded: true
+				, cb:[]
+			}
+			, {
+				wgName: "otherWidget2"
+				, loaded: true
+				, cb:[]
+			}
+		];
+
+		fun(inst.uid)
+
+		// 'otherWidget#' configs should remain in the array because they are already loaded 
+		expect(inst.notYetVisibleWgList.length).toEqual(2)
+
+		// checks the remaining widgets are as intended
+		expect(inst.notYetVisibleWgList[0].wgName).toBe('otherWidget1')
+		expect(inst.notYetVisibleWgList[1].wgName).toBe('otherWidget2')
+
+		// checks that the config marked as NOT loaded, is now loaded
+		expect(cnf.loaded).toBe(true)
+	})
+
+	it("should check that 'notYetVisibleWgList' does NOT have item removed when 'callConfigCBs' returns false", function() {
+
+		var inst = createNewInstance(true);
+
+		var cnf = {
+			wgName: "SiteHeader" // case shouldn't matter
+			, loaded: true // set to be already loaded
+			, cb:[]
+		}
+
+		inst.notYetVisibleWgList = [cnf];
+
+		fun(inst.uid)
+
+		// expect not to be removed because already loaded
+		expect(inst.notYetVisibleWgList.length).toEqual(1)
+	})
+})
+
+describe("triggerUnloadedCBs", function() {
+	var fun = window.freeStyla.testable.triggerUnloadedCBs
+
+	it("should expect true result when '*' is used for widget name and loaded is set to true, as it means 'callConfigCBs' has returned true", function() {
+		var inst = createNewInstance(true);
+
+		var cnf = {
+			wgName: "*"
+			, loaded: true
+		}
+
+		var isSuccess = fun(inst.uid, "SiteHeader", cnf)
+		expect(isSuccess).toBe(true)
+	})
+
+	it("should expect true result when '*' is used for widget name and loaded is set to false, as it means 'callConfigCBs' has returned true", function() {
+		var inst = createNewInstance(true);
+
+		var cnf = {
+			wgName: "*"
+			, loaded: false
+		}
+
+		var isSuccess = fun(inst.uid, "SiteHeader", cnf)
+		expect(isSuccess).toBe(true)
+	})
+
+	it("should expect false result when proper widget name is used and loaded is set to true, which means it has been ignored completely", function() {
+		var inst = createNewInstance(true);
+
+		var cnf = {
+			wgName: "SiteHeader"
+			, loaded: true
+		}
+
+		var isSuccess = fun(inst.uid, "SiteHeader", cnf)
+		expect(isSuccess).toBe(false)
+	})
+
+	it("should expect true result when proper widget name is used and loaded is set to false, as it means 'callConfigCBs' has returned true", function() {
+		var inst = createNewInstance(true);
+
+		var cnf = {
+			wgName: "SiteHeader"
+			, loaded: false
+		}
+
+		var isSuccess = fun(inst.uid, "SiteHeader", cnf)
+		expect(isSuccess).toBe(true)
+	})
+})
+
+
+xdescribe("triggerRegisteredCallbacks", function() {
 
 	var fun = window.freeStyla.testable.triggerRegisteredCallbacks
 
 	function setup(returnInst) {
-
-		window.freeStyla.glb.registeredWidgets = [];
-
 		var inst = createNewInstance(true);
-		inst.notYetVisibleWgList = [];
-
+		
 		if(returnInst) return inst;
 		return inst.uid;
 	}
 
-	it("should check that 'notYetVisibleWgList' has item removed when 'callRegisteredCBs' is successful", function() {
+	it("should check that 'notYetVisibleWgList' has item removed when 'callConfigCBs' is successful", function() {
+		
+		window.freeStyla.glb.registeredWidgets = [];
 
+		var inst = setup(true)
+		inst.notYetVisibleWgList = [];
+
+
+		var cnf = {
+			wgName: "SiteHeader" // case shouldn't matter
+			, loaded: false
+			, cb:[]
+		}
+
+		
 	})
 })
