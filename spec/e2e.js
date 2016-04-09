@@ -52,7 +52,7 @@ describe("callRegisteredCBs", function() {
 			, cb:[cb1, cb2]
 		}
 
-		var isSuccess = fun(uid, wgName, cnf, false);
+		var isSuccess = fun(uid, cnf, false);
 
 		expect(isSuccess).toBe(true);
 
@@ -62,16 +62,15 @@ describe("callRegisteredCBs", function() {
 	it("should reject if widget is already loaded and 'allowAll' is false", function () {
 		
 		var uid = setup()
-		  , wgName = "SiteHeader"
 
 		var cnf = {
-			wgName: wgName // case shouldn't matter
+			wgName: "SiteHeader" // case shouldn't matter
 			, $el: null
 			, loaded: true
 			, cb:[]
 		}
 
-		var isSuccess = fun(uid, wgName, cnf, false);
+		var isSuccess = fun(uid, cnf, false);
 
 		expect(isSuccess).toBe(false);
 	})
@@ -79,16 +78,15 @@ describe("callRegisteredCBs", function() {
 	it("should accept if widget is already loaded, but 'allowAll' is true", function () {
 		
 		var uid = setup()
-		  , wgName = "SiteHeader"
 
 		var cnf = {
-			wgName: wgName // case shouldn't matter
+			wgName: "SiteHeader" // case shouldn't matter
 			, $el: null
 			, loaded: true
 			, cb:[]
 		}
 
-		var isSuccess = fun(uid, wgName, cnf, true);
+		var isSuccess = fun(uid, cnf, true);
 
 		expect(isSuccess).toBe(true);
 	})
@@ -102,21 +100,41 @@ describe("callRegisteredCBs", function() {
 		parentEl.classList.add(clsLoading)
 
 		var inst = setup(true)
-		  , wgName = "SiteHeader"
 
 		var cnf = {
-			wgName: wgName // case shouldn't matter
+			wgName: "SiteHeader" // case shouldn't matter
 			, $el: $(child)
 			, loaded: false
 			, cb:[]
 		}
 
-		var isSuccess = fun(inst.uid, wgName, cnf, false);
+		var isSuccess = fun(inst.uid, cnf, false);
 
 		expect(isSuccess).toBe(false); // checks it was rejected
 		expect(inst.notYetVisibleWgList.indexOf(cnf)).toEqual(0) // checks it was added to the list of not yet visible widgets
 
 		cleanupElement(parentEl);
 		cleanupElement(child);
+	})
+})
+
+
+describe("triggerRegisteredCallbacks", function() {
+
+	var fun = window.freeStyla.testable.triggerRegisteredCallbacks
+
+	function setup(returnInst) {
+
+		window.freeStyla.glb.registeredWidgets = [];
+
+		var inst = createNewInstance(true);
+		inst.notYetVisibleWgList = [];
+
+		if(returnInst) return inst;
+		return inst.uid;
+	}
+
+	it("should check that 'notYetVisibleWgList' has item removed when 'callRegisteredCBs' is successful", function() {
+
 	})
 })

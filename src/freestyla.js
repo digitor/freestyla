@@ -103,9 +103,10 @@
 
     /**
      * @description Calls the config callback functions if all conditions pass. If config isn't marked as 'loaded = true', adds to an array to call later when it becomes visible.
+     * @param uid (string) - Unique Identifier for the instance.
      *
      */
-    function callRegisteredCBs(uid, wgName, cnf, allowAll) {
+    function callRegisteredCBs(uid, cnf, allowAll) {
         var inst = getInstance(uid);
 
         // if already loaded don't do anything
@@ -120,7 +121,7 @@
             return false;
         }
 
-        
+        var wgName = cnf.wgName;
         _.forEach(cnf.cb, function (cb) {
             //_.throttle(cb, 300);
             cb(wgName);
@@ -130,7 +131,26 @@
     }
 
 
-    // check if any widgets have registered callbacks from calling 'utils.freeLoaded'
+    /**
+     * @description Checks 'notYetVisibleWgList' array and removes any widgets that are loaded already.
+     * @param uid (string) - Unique Identifier for the instance.
+     */
+    function removeFromNotVisibleList(uid) {
+        
+        // must be reverse array because of splice
+        var cnf, loaded;
+        for (var i = inst.notYetVisibleWgList.length - 1; i > -1; i--) {
+            cnf = inst.notYetVisibleWgList[i];
+            loaded = callRegisteredCBs(uid, cnf);
+            if (loaded) {
+                inst.notYetVisibleWgList.splice(i, 1);
+                cnf.loaded = true;
+            }
+        }
+    }
+
+
+    // check if any widgets have registered callbacks from calling 'freeLoaded'
     function triggerRegisteredCallbacks(uid, wgName) {
         var inst = getInstance(uid);
 
@@ -138,14 +158,11 @@
 
         _.forEach(registeredWidgets, function (cnf) {
 
-            //if (inst.notYetVisibleWgList.length > 1)
-                //console.log("inst.notYetVisibleWgList.length", inst.notYetVisibleWgList)
-
             // must be reverse array because of splice
             var cnf2, loaded;
             for (var i = inst.notYetVisibleWgList.length - 1; i > -1; i--) {
                 cnf2 = inst.notYetVisibleWgList[i];
-                loaded = callRegisteredCBs(uid, wgName, cnf2);
+                loaded = callRegisteredCBs(uid, cnf2);
                 if (loaded) {
                     inst.notYetVisibleWgList.splice(i, 1);
                     cnf2.loaded = true;
@@ -154,11 +171,11 @@
 
             if (!cnf.loaded) {
                 if (wgName === cnf.wgName || cnf.wgName === "*") {
-                    loaded = callRegisteredCBs(uid, wgName, cnf);
+                    loaded = callRegisteredCBs(uid, cnf);
                     if (loaded) cnf.loaded = true;
                 }
             } else if (cnf.wgName === "*") {
-                callRegisteredCBs(uid, wgName, cnf, true);
+                callRegisteredCBs(uid, cnf, true);
             }
         });
 
