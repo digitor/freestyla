@@ -101,16 +101,21 @@
     }
 
 
-    // Calls the config callback functions if all conditions pass
+    /**
+     * @description Calls the config callback functions if all conditions pass. If config isn't marked as 'loaded = true', adds to an array to call later when it becomes visible.
+     *
+     */
     function callRegisteredCBs(uid, wgName, cnf, allowAll) {
         var inst = getInstance(uid);
 
         // if already loaded don't do anything
         if (!allowAll && cnf.loaded === true) return false;
 
+        // removed this condition, as the loading class should have been removed already
+        // if (cnf.$el && cnf.$el.hasClass(clsLoading) ||
+
         // if a jQuery element is supplied, we check if it has any parents with the 'clsLoading' class and do nothing until then
-        if (cnf.$el && cnf.$el.hasClass(clsLoading) ||
-            cnf.$el && cnf.$el.closest("."+clsLoading).length) {
+        if (cnf.$el && cnf.$el.closest("."+clsLoading).length) {
             if (inst.notYetVisibleWgList.indexOf(cnf) === -1) inst.notYetVisibleWgList.push(cnf);
             return false;
         }
