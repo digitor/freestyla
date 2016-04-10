@@ -28,6 +28,12 @@
             return el;
         }
 
+        , createWg: function(id, cls, skipTest, container) {
+            var el = SELF.createEl(id, null, cls, skipTest, container)
+            el.classList.add('cssload-hide');
+            return el;
+        }
+
         // el can be an ID as well as an actual DOM element
         , cleanupElement: function(el) {
             if(typeof el === "string") el = document.getElementById(el);
@@ -56,6 +62,23 @@
             }
         }
 
+        // el can be an ID as well as an actual DOM element
+        , getCompProp: function(el, prop) {
+            if(typeof el === "string") el = document.getElementById(el);
+            var comp = window.getComputedStyle(el);
+            return comp.getPropertyValue(prop);
+        }
+
+        , getCssPath: function(file) {
+            return 'http://localhost:8081/dist/' + file;
+        }
+
+        // adds freeStyla element so style sheets have an element to reference in the DOM
+        , addFreeStylaEl: function() {
+            var freestylaEl = document.createElement("span");
+            freestylaEl.setAttribute("id", window.freeStyla.vars.MAIN_ID);
+            document.body.appendChild(freestylaEl);
+        }
     }
 	
     // exposes library for browser and Node-based code (such as unit tests)

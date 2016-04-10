@@ -1,0 +1,8 @@
+.siteheader {
+  visibility: visible;
+  width: 100px !important;
+  height: 200px !important;
+  background-color: black; }
+
+.sthdr-title {
+  color: white; }

@@ -18,6 +18,7 @@ module.exports = function(config) {
       'node_modules/lodash/dist/lodash.min.js',
       'src/lib/subtrees/loadcss/onloadCSS.js',
       'src/lib/subtrees/loadcss/loadCSS.js',
+      'dist/app.css',
       'src/*.js',
       'spec/test-utils.js',
       'spec/e2e.js'

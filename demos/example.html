@@ -2,20 +2,28 @@
 <html class="no-js">
 <head>
 	<title>Example</title>
+
+	<link rel="stylesheet" href="/dist/app.css">
+	<link rel="stylesheet" href="/dist/siteheader.css">
 </head>
 <body>
 
     <p class="p-sm">TODO.</p>
 
+    <div class="siteheader cssload-hide"></div>
 
   <script src="/node_modules/jquery/dist/jquery.min.js"></script>
   <script src="/node_modules/lodash/dist/lodash.min.js"></script>
   <script src="/src/lib/classList.js"></script>
-	<script src="/src/freestyla.js"></script>
+  <script src='/src/lib/subtrees/loadcss/onloadCSS.js'></script>
+  <script src='/src/lib/subtrees/loadcss/loadCSS.js'></script>
+  <script src="/src/freestyla.js"></script>
 
 
   <script>
-      freeStyla.onDemandCSS($, _);
+      freeStyla.testable.ensureStylesLoaded($(".siteheader"), "/dist/siteheader.css", function(isSuccess) {
+      	console.log("isSuccess", isSuccess)
+      });
   </script>
 
 </body>

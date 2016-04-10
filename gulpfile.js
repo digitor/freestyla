@@ -48,7 +48,7 @@ gulp.task('minjs', function() {
 
 gulp.task('styles', function() {
 
-    return gulp.src("demos/app/*.scss")
+    return gulp.src("demos/**/*.scss")
       //.pipe(sourcemaps.init())
       .pipe(sass({ style: 'compressed' }))
         .on('error', function (err) {
@@ -57,7 +57,7 @@ gulp.task('styles', function() {
         .pipe(flatten())
         .pipe(autoprefixer({browsers: autoPrefixerBrowsers}))
         //.pipe(sourcemaps.write('./maps'))
-        .pipe(rename('freestyla.min.css'))
+        //.pipe(rename('freestyla.min.css'))
         .pipe(gulp.dest("dist/"))
 })
 

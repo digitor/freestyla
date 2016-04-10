@@ -3,7 +3,11 @@
 window.freeStyla.suppressWarnings = true;
 
 var createEl = window.testUtils.createEl
+  , createWg = window.testUtils.createWg
   , cleanupElement = window.testUtils.cleanupElement
+  , getCompProp = window.testUtils.getCompProp
+  , getCssPath = window.testUtils.getCssPath
+  , addFreeStylaEl = window.testUtils.addFreeStylaEl
   , createNewInstance = window.freeStyla.testable.createNewInstance
   , getUID = window.testUtils.getUID
   , clsLoading = window.freeStyla.vars.clsLoading
@@ -315,12 +319,33 @@ describe("triggerRegisteredCallbacks", function() {
         expect(inst.notYetVisibleWgList).toBeDefined();
         expect(inst.notYetVisibleWgList.length).toEqual(1);
         expect(inst.notYetVisibleWgList[0].wgName).toBe(wgName);
+
+        cleanupElement(parentEl)
+        cleanupElement(child)
 	})
 })
 
 
 describe("ensureStylesLoaded", function() {
-	it("should load a css file that allows a widget to be visible and trigger a callback", function() {
-		// todo
+
+	var fun = window.freeStyla.testable.ensureStylesLoaded
+
+	it("should load a css file that allows a widget to be visible and trigger a callback", function(done) {
+		
+		addFreeStylaEl();
+	
+		console.log(document.body)
+		
+		var inst = createNewInstance(true)
+		  , uid = getUID()
+		  , wg = createWg(uid, "siteheader")
+
+		expect(getCompProp(wg, "visibility")).toBe("hidden");
+
+
+		fun($(wg), getCssPath("siteheader.css"), function(isSuccess) {
+			console.log("isSuccess", isSuccess)
+			done()
+		})
 	})
 })

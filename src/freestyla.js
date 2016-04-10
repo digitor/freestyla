@@ -4,6 +4,7 @@
 	var SELF
       , freeStyla
       , NS = "freeStyla"
+      , MAIN_ID = "freestyla"
       , clsLoading = "cssload-hide"
       , instances = [];  // there should only really be 1 instance, but we give each public function a unique instance so we can store variables for each
 
@@ -266,6 +267,7 @@
     }
 
 
+
     /**
      * @description Checks if a CSS file has loaded, which allows the widget to be visible, then triggers a callback
      * @param $thisWg (jQuery element) - jQuery element to check visibility on.
@@ -274,7 +276,16 @@
      */
     function ensureStylesLoaded($thisWg, cssFile, cb) {
 
-        var ss = loadCSS(cssFile, document.getElementById("widgetcss"));
+        var freestylaEl = document.getElementById(MAIN_ID);
+        if(!freestylaEl) {
+            freestylaEl = document.createElement("span");
+            freestylaEl.setAttribute("id", MAIN_ID);
+            document.body.insertBefore(freestylaEl, document.body.firstChild);
+        }
+
+        var ss = loadCSS(cssFile, freestylaEl);
+
+
 
         onloadCSS(ss, function () {
             
@@ -282,12 +293,16 @@
             var checkLoaded = function () {
                 
                 var wgCSSOk = !$thisWg || $thisWg.eq(0).css("visibility") === "visible"; // $('link[href*="/' + widgetName + '.css"]').length > 0;//
+                
+                console.log("$thisWg", $thisWg.length, $thisWg.eq(0).css("visibility"))
 
                 if (wgCSSOk) {
-                    cb();
+                    cb(true);
                 } else if (count < 120) { // limit to 30 attempts (36 seconds)
                     count++;
                     setTimeout(checkLoaded, 300);
+                } else {
+                    cb(false);
                 }
             }
 
@@ -579,6 +594,7 @@
         , vars: {
             NS: NS
             , clsLoading: clsLoading
+            , MAIN_ID: MAIN_ID
         }
     }
 
