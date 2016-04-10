@@ -31,6 +31,7 @@
         , createWg: function(id, cls, skipTest, container) {
             var el = SELF.createEl(id, null, cls, skipTest, container)
             el.classList.add('cssload-hide');
+            el.setAttribute("data-freestyla-wg", "")
             return el;
         }
 
@@ -60,6 +61,27 @@
             if(freeStyla && freeStyla.glb) {
                 freeStyla.glb.widgetNames = ["SiteFooter", "SiteHeader"];
             }
+            if(typeof window === "undefined") return;
+
+            // remove elements added
+            var els = document.querySelectorAll("[data-freestyla-el]");
+            for(var i=0; i < els.length; i++) {
+                document.body.removeChild(els[i]);
+            }
+
+            // remove widgets added
+            var wgs = document.querySelectorAll("[data-freestyla-wg]");
+            for(var i=0; i < wgs.length; i++) {
+                document.body.removeChild(wgs[i]);
+            }
+
+            // remove stylesheets added
+            var styleSheets = document.querySelectorAll("[data-freestyla-ss]");
+            for(var i=0; i < styleSheets.length; i++) {
+                document.body.removeChild(styleSheets[i]);
+            }
+
+            SELF.addFreeStylaEl();
         }
 
         // el can be an ID as well as an actual DOM element
@@ -73,11 +95,23 @@
             return 'http://localhost:8081/dist/' + file;
         }
 
-        // adds freeStyla element so style sheets have an element to reference in the DOM
+        // Adds freeStyla element so style sheets have an element to reference in the DOM. Make sure you add this before modifying the DOM
         , addFreeStylaEl: function() {
+
+            if(typeof window === "undefined") return;
+
+            var id = window.freeStyla.vars.MAIN_ID
+              , oldEl = document.getElementById(id);
+            if(oldEl) document.body.removeChild(oldEl);
+            
             var freestylaEl = document.createElement("span");
-            freestylaEl.setAttribute("id", window.freeStyla.vars.MAIN_ID);
+            freestylaEl.setAttribute("id", id);
             document.body.appendChild(freestylaEl);
+
+            // just for tests, so they can be removed easily
+            freestylaEl.setAttribute("data-freestyla-el", "")
+
+            return freestylaEl;
         }
     }
 	

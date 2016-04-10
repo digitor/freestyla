@@ -269,13 +269,15 @@
 
 
     /**
-     * @description Checks if a CSS file has loaded, which allows the widget to be visible, then triggers a callback
+     * @description Checks if a CSS file has loaded, which allows the widget to be visible, then triggers a callback.
      * @param $thisWg (jQuery element) - jQuery element to check visibility on.
      * @param cssFile (string) - Url to the CSS file to check.
      * @param cb (function) - The callback to trigger once styles have loaded.
+     * @param to (number) optional - Give a custom timeout. Useful for tests.
      */
-    function ensureStylesLoaded($thisWg, cssFile, cb) {
+    function ensureStylesLoaded($thisWg, cssFile, cb, to) {
 
+        // if not yet added, adds the element of id "freestyla", which all the styles will be added before
         var freestylaEl = document.getElementById(MAIN_ID);
         if(!freestylaEl) {
             freestylaEl = document.createElement("span");
@@ -285,7 +287,7 @@
 
         var ss = loadCSS(cssFile, freestylaEl);
 
-
+        ss.setAttribute("data-freestyla-ss", "")
 
         onloadCSS(ss, function () {
             
@@ -294,11 +296,9 @@
                 
                 var wgCSSOk = !$thisWg || $thisWg.eq(0).css("visibility") === "visible"; // $('link[href*="/' + widgetName + '.css"]').length > 0;//
                 
-                console.log("$thisWg", $thisWg.length, $thisWg.eq(0).css("visibility"))
-
                 if (wgCSSOk) {
                     cb(true);
-                } else if (count < 120) { // limit to 30 attempts (36 seconds)
+                } else if (count < to || 120) { // limit to a number of attempts
                     count++;
                     setTimeout(checkLoaded, 300);
                 } else {
@@ -309,6 +309,10 @@
             // iterate until widget visible
             checkLoaded();
         });
+
+        ss.onerror = function() {
+            cb(false);
+        }
     }
 
     freeStyla = {

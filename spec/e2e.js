@@ -17,6 +17,8 @@ beforeEach(function() {
 	window.testUtils.reset();
 });
 
+var noop = function(){};
+
 describe("callConfigCBs", function() {
 
 	var fun = window.freeStyla.testable.callConfigCBs
@@ -330,21 +332,35 @@ describe("ensureStylesLoaded", function() {
 
 	var fun = window.freeStyla.testable.ensureStylesLoaded
 
+	it("should add element with ID of 'freestyla', if it does not already exist", function() {
+		var id = window.freeStyla.vars.MAIN_ID;
+        document.body.removeChild(document.getElementById(id));
+
+        var wg = createWg(null, "siteheader")
+        fun($(wg), getCssPath("siteheader.css"), noop)
+
+        expect(document.getElementById(id)).toBeDefined()
+	})
+
 	it("should load a css file that allows a widget to be visible and trigger a callback", function(done) {
-		
-		addFreeStylaEl();
-	
-		console.log(document.body)
-		
-		var inst = createNewInstance(true)
-		  , uid = getUID()
-		  , wg = createWg(uid, "siteheader")
+
+		var wg = createWg(null, "siteheader")
 
 		expect(getCompProp(wg, "visibility")).toBe("hidden");
 
-
 		fun($(wg), getCssPath("siteheader.css"), function(isSuccess) {
-			console.log("isSuccess", isSuccess)
+			expect(isSuccess).toBe(true);
+			expect(getCompProp(wg, "visibility")).toBe("visible");
+			done()
+		})
+	})
+
+	it("should fail to load a css file with an incorrect path, but still trigger the callback", function(done) {
+		var wg = createWg(null, "siteheader")
+
+		fun($(wg), "/a-css-file-with-wrong-path.css", function(isSuccess) {
+			expect(isSuccess).toBe(false);
+			expect(getCompProp(wg, "visibility")).toBe("hidden");
 			done()
 		})
 	})
