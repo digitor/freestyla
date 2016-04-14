@@ -334,6 +334,8 @@ describe("ensureStylesLoaded", function() {
 
 	it("should add element with ID of 'freestyla', if it does not already exist", function() {
 		var id = window.freeStyla.vars.MAIN_ID;
+
+		// clear it first, in case already exists
         document.body.removeChild(document.getElementById(id));
 
         var wg = createWg(null, "siteheader")
@@ -346,6 +348,7 @@ describe("ensureStylesLoaded", function() {
 
 		var wg = createWg(null, "siteheader")
 
+		// make sure the visibility is hidden before loading the CSS file
 		expect(getCompProp(wg, "visibility")).toBe("hidden");
 
 		fun($(wg), getCssPath("siteheader.css"), function(isSuccess) {
@@ -363,5 +366,38 @@ describe("ensureStylesLoaded", function() {
 			expect(getCompProp(wg, "visibility")).toBe("hidden");
 			done()
 		})
+	})
+})
+
+describe("startCSSLoading", function() {
+	var fun = window.freeStyla.testable.startCSSLoading
+
+	it("should trigger a 'freestyla-css-loaded' event if CSS file is already registered and loaded, returning true", function(done) {
+
+		var wgName = "siteheader"
+		$doc.on(window.freeStyla.vars.CSS_LOADED_EVT, function(evt, data) {
+			expect(data.wgName).toBe(wgName);
+			expect(data.isSuccess).toBe(true);
+			done()
+		});
+
+		var $wg = $(createWg(null, wgName))
+
+		// mark the widget as registered and loaded
+		var cnf = {
+			wgName: wgName
+			, loaded: true
+			, $el: $wg
+			, cb:[]
+		}
+
+		// Registers the widget
+        window.freeStyla.prepare([cnf]);
+
+		var uid = createNewInstance()
+		  , isSuccess = fun(uid, wgName, $wg)
+
+		 // this tells us that the file will not be loaded again because it is already registered and loaded
+		 expect(isSuccess).toBe(true)
 	})
 })

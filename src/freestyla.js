@@ -5,6 +5,7 @@
       , freeStyla
       , NS = "freeStyla"
       , MAIN_ID = "freestyla"
+      , CSS_LOADED_EVT = "freestyla-css-loaded"
       , clsLoading = "cssload-hide"
       , instances = [];  // there should only really be 1 instance, but we give each public function a unique instance so we can store variables for each
 
@@ -228,7 +229,14 @@
     }
 
 
-    // start loading the CSS
+    /**
+     * @description Starts loading a CSS file, first checking if it has already been loaded and if element in question is visible.
+     * @param widgetName (string) - Name of the widget to load.
+     * @param $thisWg (jQuery element) - The jQuery element to check visibility on.
+     * @param useTempWg (boolean) optional - If true, will attempt to load a CSS file with the "TEMP_" prefix. Useful for complex build scripts that need to compile widgets individually for faster development.
+     * @param successCB (function) optional - A callback function when the CSS file has loaded, or failed to load. Passes widget name and success state as arguments.
+     * @return (boolean) - True if the CSS file was already loaded. False if attempting to load.
+     */
     function startCSSLoading(uid, widgetName, $thisWg, useTempWg, successCB) {
         var inst = getInstance(uid);
 
@@ -238,21 +246,22 @@
         } else {
 
             var matches = _.where(window.freeStyla.glb.registeredWidgets, { wgName: widgetName, loaded: true });
+            
             if (matches.length) {
 
                 //clsLoading already removed in removeCriticalCssLoad
             
                 triggerRegisteredCallbacks(uid, widgetName);
-                $doc.trigger("widget-css-loaded", { wgName: widgetName });
+                $doc.trigger("freestyla-css-loaded", { wgName: widgetName, isSuccess: true });
 
-                if (successCB) successCB(widgetName);
-                return;
+                if (successCB) successCB(widgetName, true);
+                return true;
             }
         }
 
         // if already in critical css, just trigger the registered callbacks and events
 
-        ensureStylesLoaded($thisWg, cssFile, function() {
+        ensureStylesLoaded($thisWg, cssFile, function(isSuccess) {
             sortTempWidgetOrder(uid, useTempWg, widgetName, cssFile);
 
             // remove all instances' css hide class, so they become visible
@@ -260,10 +269,11 @@
 
             // tell the world what happened
             triggerRegisteredCallbacks(uid, widgetName);
-            $doc.trigger("widget-css-loaded", { wgName: widgetName });
-            if (successCB) successCB(widgetName);
-
+            $doc.trigger("freestyla-css-loaded", { wgName: widgetName, isSuccess: isSuccess });
+            if (successCB) successCB(widgetName, isSuccess);
         });
+
+        return false;
     }
 
 
@@ -273,9 +283,9 @@
      * @param $thisWg (jQuery element) - jQuery element to check visibility on.
      * @param cssFile (string) - Url to the CSS file to check.
      * @param cb (function) - The callback to trigger once styles have loaded.
-     * @param to (number) optional - Give a custom timeout. Useful for tests.
+     * @param attemptMax (number) optional - Give a custom max attempt count. Useful for tests.
      */
-    function ensureStylesLoaded($thisWg, cssFile, cb, to) {
+    function ensureStylesLoaded($thisWg, cssFile, cb, attemptCount) {
 
         // if not yet added, adds the element of id "freestyla", which all the styles will be added before
         var freestylaEl = document.getElementById(MAIN_ID);
@@ -298,7 +308,7 @@
                 
                 if (wgCSSOk) {
                     cb(true);
-                } else if (count < to || 120) { // limit to a number of attempts
+                } else if (count < attemptCount || 120) { // limit to a number of attempts
                     count++;
                     setTimeout(checkLoaded, 300);
                 } else {
@@ -310,6 +320,7 @@
             checkLoaded();
         });
 
+        // strange, but LoadCSS doesn't include an error cb or event
         ss.onerror = function() {
             cb(false);
         }
@@ -592,6 +603,7 @@
             , triggerRegisteredCallbacks: triggerRegisteredCallbacks
             , getTempWidgetQueryList: getTempWidgetQueryList
             , ensureStylesLoaded: ensureStylesLoaded
+            , startCSSLoading: startCSSLoading
         }
 
         // maybe useful variables
@@ -599,6 +611,7 @@
             NS: NS
             , clsLoading: clsLoading
             , MAIN_ID: MAIN_ID
+            , CSS_LOADED_EVT: CSS_LOADED_EVT
         }
     }
 
