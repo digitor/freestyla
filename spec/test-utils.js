@@ -92,7 +92,7 @@
         }
 
         , getCssPath: function(file) {
-            return 'http://localhost:8081/dist/' + file;
+            return 'http://localhost:8081/dist/' + (file || "");
         }
 
         // Adds freeStyla element so style sheets have an element to reference in the DOM. Make sure you add this before modifying the DOM

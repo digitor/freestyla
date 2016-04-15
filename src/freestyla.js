@@ -240,7 +240,7 @@
     function startCSSLoading(uid, widgetName, $thisWg, useTempWg, successCB) {
         var inst = getInstance(uid);
 
-        var cssFile = freeStyla.glb.buildDirCSS + "widgets/" + widgetName + ".css";
+        var cssFile = freeStyla.glb.buildDirCSS + widgetName + ".css";
         if (useTempWg) {
             cssFile = freeStyla.glb.buildDirCSS + "TEMP_" + widgetName + ".css";
         } else {

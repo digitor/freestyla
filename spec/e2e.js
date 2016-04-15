@@ -372,32 +372,65 @@ describe("ensureStylesLoaded", function() {
 describe("startCSSLoading", function() {
 	var fun = window.freeStyla.testable.startCSSLoading
 
-	it("should trigger a 'freestyla-css-loaded' event if CSS file is already registered and loaded, returning true", function(done) {
-
+	function setup(isLoaded) {
 		var wgName = "siteheader"
-		$doc.on(window.freeStyla.vars.CSS_LOADED_EVT, function(evt, data) {
-			expect(data.wgName).toBe(wgName);
-			expect(data.isSuccess).toBe(true);
-			done()
-		});
-
+		
 		var $wg = $(createWg(null, wgName))
 
 		// mark the widget as registered and loaded
 		var cnf = {
 			wgName: wgName
-			, loaded: true
+			, loaded: isLoaded
 			, $el: $wg
 			, cb:[]
 		}
 
 		// Registers the widget
-        window.freeStyla.prepare([cnf]);
+        window.freeStyla.prepare([cnf], getCssPath());
 
-		var uid = createNewInstance()
-		  , isSuccess = fun(uid, wgName, $wg)
+        var inst = createNewInstance(true)
+		return {
+			wgName:wgName
+			, $wg: $wg
+			, inst: inst
+			, uid: inst.uid
+		}
+	}
+
+	it("should trigger a 'freestyla-css-loaded' event if CSS file is already registered and loaded, returning true", function(done) {
+
+		var obj = setup(true)
+		$doc.on(window.freeStyla.vars.CSS_LOADED_EVT, function(evt, data) {
+			expect(data.wgName).toBe(obj.wgName);
+			expect(data.isSuccess).toBe(true);
+			done()
+		});
+
+		var isSuccess = fun(obj.uid, obj.wgName, obj.$wg)
 
 		 // this tells us that the file will not be loaded again because it is already registered and loaded
 		 expect(isSuccess).toBe(true)
+	})
+
+	it("should load a widget CSS file and mark the registered widget as loaded", function(done) {
+
+		var obj = setup(false)
+
+		var isSuccess = fun(obj.uid, obj.wgName, obj.$wg, false, function(_wgName, isSuccess) {
+
+		  	// just checks args are correct
+		  	expect(_wgName).toBe(obj.wgName);
+			expect(isSuccess).toBe(true);
+			
+			// then checks only 1 item in registered widget list and that it is loaded
+			var regWg = window.freeStyla.glb.registeredWidgets
+			expect(regWg.length).toEqual(1)
+			expect(regWg[0].wgName).toBe(obj.wgName)
+			expect(regWg[0].loaded).toBe(true)
+			done()
+		  })
+
+		 // this tells us that the file will not be loaded again because it is already registered and loaded
+		 expect(isSuccess).toBe(false)
 	})
 })
