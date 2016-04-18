@@ -105,13 +105,10 @@ gulp.task("test", function(done) {
 
 gulp.task('e2e-tests', function (done) {
 
-	gutil.log(gutil.colors.magenta('WARNING: you must have `gulp webserver` going before running this task, plus an active internet connection (for karma proxies).'));
+	gutil.log(gutil.colors.magenta('WARNING: you must have `gulp webserver` going before running this task.'));
 
 	new Server({
 		configFile: __dirname + '/karma.conf.js',
-		proxies: {
-		  '/demos/img/': 'http://localhost:8081/demos/img/'
-		},
 		 singleRun: true
 	}, function() {
 		if(forceKill && webserverStream) webserverStream.emit("kill");

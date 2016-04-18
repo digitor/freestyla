@@ -77,7 +77,7 @@
 
             // remove stylesheets added
             var styleSheets = document.querySelectorAll("[data-freestyla-ss]");
-            for(var i=0; i < styleSheets.length; i++) {
+            for(i=0; i < styleSheets.length; i++) {
                 document.body.removeChild(styleSheets[i]);
             }
 

@@ -475,10 +475,11 @@ describe("removeCriticalCssLoad", function() {
 
 	var fun = window.freeStyla.testable.removeCriticalCssLoad
 	
-	it("should mark a widget as loaded, then call this function to have the loading state removed", function() {
+	it("should mark a widget as loaded, then call this function to have the loading state removed on multiple instances of the widget", function() {
 		var wgName = "siteheader"
 		
-		var wg = createWg(null, wgName)
+		var wg1 = createWg(null, wgName)
+		  , wg2 = createWg(null, wgName)
 
 		// mark the widget as registered and loaded
 		var cnf = {
@@ -493,8 +494,42 @@ describe("removeCriticalCssLoad", function() {
 
         var uid = createNewInstance()
 
-        expect(wg.classList).toContain(clsLoading)
+        expect(wg1.classList).toContain(clsLoading)
+        expect(wg2.classList).toContain(clsLoading)
         expect(fun(uid)).toBe(true)
-        expect(wg.classList).not.toContain(clsLoading)
+        expect(wg1.classList).not.toContain(clsLoading)
+        expect(wg2.classList).not.toContain(clsLoading)
 	})
 })
+
+describe("checkLoadCssAttr", function() {
+
+	var fun = window.freeStyla.testable.checkLoadCssAttr
+
+	it("should return a jQuery element with 'data-load-wg' attribute containing a single matching widget name event with uppercase characters in it", function() {
+		
+		var wgName = "siteheader"
+
+		var wg = createWg(null, wgName)
+
+		wg.setAttribute("data-load-wg", "siteHeader")
+
+		var $el = fun(wgName)
+		expect( $el ).toBeDefined();
+		expect( $el.length ).toEqual(1)
+	})
+
+	it("should return a jQuery element with 'data-load-wg' attribute containing a single matching widget when multiple exist in attribute", function() {
+		
+		var wgName = "siteheader"
+
+		var wg = createWg(null, wgName)
+
+		wg.setAttribute("data-load-wg", "sitefooter siteHeader")
+
+		var $el = fun(wgName)
+		expect( $el ).toBeDefined();
+		expect( $el.length ).toEqual(1)
+	})
+})
+

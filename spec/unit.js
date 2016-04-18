@@ -80,3 +80,18 @@ describe("getTempWidgetQueryList", function() {
 		expect(fun("http://someurl.com?another=param")).toBeFalsy();
 	})
 })
+
+describe("markWidgetAsPriority", function() {
+
+	var fun = freeStyla.testable.markWidgetAsPriority
+
+	it("should return true if widget is in list, even if list item has uppercase in it", function() {
+		var inList = fun(["siteHeader"], "siteheader")
+		expect(inList).toBe(true)
+	})
+
+	it("should return true if widget is in list", function() {
+		var inList = fun(["siteheader"], "sitefooter")
+		expect(inList).toBe(false)
+	})
+})

@@ -306,6 +306,35 @@
         return found;
     }
 
+    function markWidgetAsPriority(priorityWgList, wgName) {
+      var isPriority = false;
+
+      for(var i=0; i<priorityWgList.length; i++) {
+        if (priorityWgList[i].toLowerCase() === wgName) return true;
+      }
+
+      return false;
+    }
+
+    function checkLoadCssAttr(matchWgName) {
+
+      // force to lowercase
+      matchWgName = matchWgName.toLowerCase()
+
+      var match = null
+        , $loadCssList = $("[data-load-wg]")
+        , $this;
+
+      $loadCssList.each(function () {
+          $this = $(this);
+          _.forEach($this.attr("data-load-wg").split(" "), function (wgName) {
+              if (matchWgName === wgName.toLowerCase()) match = $this;
+          });
+      });
+
+      return match;
+    }
+
 
     /**
      * @description Checks if a CSS file has loaded, which allows the widget to be visible, then triggers a callback.
@@ -408,10 +437,7 @@
 
                 widgetName = widgetName.toLowerCase();
 
-                var isPriority = false;
-                _.map(priorityWgList, function (item) {
-                    if (item.toLowerCase() === widgetName) isPriority = true;
-                });
+                var isPriority = markWidgetAsPriority(widgetName);
 
                 $thisWg = $("." + widgetName);
                 var useTempWg = inst.tempQueryList && inst.tempQueryList.indexOf(widgetName) !== -1;
@@ -428,7 +454,7 @@
 
                 } else {
                     // then check for data attribute matches
-                    var $attrMatch = SELF.checkLoadCssAttr($, _, widgetName);
+                    var $attrMatch = SELF.checkLoadCssAttr(widgetName);
 
                     if ($attrMatch) { // looks for attributes that tell it to load first
 
@@ -585,22 +611,6 @@
             });
         }
 
-
-        , checkLoadCssAttr: function ($, _, matchWgName) {
-            var match = null
-              , $loadCssList = $("[data-load-wg]")
-              , $this;
-
-            $loadCssList.each(function () {
-                $this = $(this);
-                _.forEach($this.attr("data-load-wg").split(" "), function (wgName) {
-                    if (matchWgName === wgName) match = $this;
-                });
-            });
-
-            return match;
-        }
-
         , testable: {
         	  getUID: getUID
           , createNewInstance: createNewInstance
@@ -614,6 +624,8 @@
           , ensureStylesLoaded: ensureStylesLoaded
           , startCSSLoading: startCSSLoading
           , removeCriticalCssLoad: removeCriticalCssLoad
+          , markWidgetAsPriority: markWidgetAsPriority
+          , checkLoadCssAttr: checkLoadCssAttr
         }
 
         // maybe useful variables
