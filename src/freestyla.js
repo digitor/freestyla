@@ -234,15 +234,15 @@
      * @param widgetName (string) - Name of the widget to load.
      * @param $thisWg (jQuery element) - The jQuery element to check visibility on.
      * @param useTempWg (boolean) optional - If true, will attempt to load a CSS file with the "TEMP_" prefix. Useful for complex build scripts that need to compile widgets individually for faster development.
-     * @param successCB (function) optional - A callback function when the CSS file has loaded, or failed to load. Passes widget name and success state as arguments.
+     * @param successCB (function) optional - A callback function when the CSS file has loaded, or failed to load. Passes widget name, success state and CSS file path as arguments.
      * @return (boolean) - True if the CSS file was already loaded. False if attempting to load.
      */
     function startCSSLoading(uid, widgetName, $thisWg, useTempWg, successCB) {
         var inst = getInstance(uid);
 
-        var cssFile = freeStyla.glb.buildDirCSS + widgetName + ".css";
+        var cssFile = freeStyla.glb.buildDirCSS;
         if (useTempWg) {
-            cssFile = freeStyla.glb.buildDirCSS + "TEMP_" + widgetName + ".css";
+            cssFile += "TEMP_";
         } else {
 
             var matches = _.where(window.freeStyla.glb.registeredWidgets, { wgName: widgetName, loaded: true });
@@ -254,28 +254,57 @@
                 triggerRegisteredCallbacks(uid, widgetName);
                 $doc.trigger("freestyla-css-loaded", { wgName: widgetName, isSuccess: true });
 
-                if (successCB) successCB(widgetName, true);
+                if (successCB) successCB(widgetName, true, null);
                 return true;
             }
         }
+
+        cssFile += widgetName + ".css";
 
         // if already in critical css, just trigger the registered callbacks and events
 
         ensureStylesLoaded($thisWg, cssFile, function(isSuccess) {
             sortTempWidgetOrder(uid, useTempWg, widgetName, cssFile);
 
-            // remove all instances' css hide class, so they become visible
+            // remove all instances' css hide class, so they become visible. This is really just a tidy up function, as the CSS itself should contain the "visibility:visible" style.
             $("." + widgetName).removeClass(clsLoading);
 
             // tell the world what happened
             triggerRegisteredCallbacks(uid, widgetName);
             $doc.trigger("freestyla-css-loaded", { wgName: widgetName, isSuccess: isSuccess });
-            if (successCB) successCB(widgetName, isSuccess);
+            if (successCB) successCB(widgetName, isSuccess, cssFile);
         });
 
         return false;
     }
 
+
+    /**
+     * @description Removes the loading state from any registered widgets that are already loaded (using class stored in 'clsLoading' variable. Call this if you've got preloaded critical CSS.
+     * @param uid (string) - the UID for the instance of freeStyla, returned when calling the 'start' method.
+     * @param found (boolean) - If the state/class was successfully removed
+     */
+    function removeCriticalCssLoad(uid) {
+        var $thisWg, inst = getInstance(uid)
+          , found = false;
+
+        _.forEach(SELF.glb.registeredWidgets, function (item) {
+
+            if (item.loaded && item.wgName !== "*") {
+
+                $thisWg = $("." + item.wgName);
+
+                if ($thisWg.length) {
+                    
+                    found = true;
+                    // remove all instances' css hide class, so they become visible
+                    $thisWg.removeClass(clsLoading);
+                }
+            }
+        });
+
+        return found;
+    }
 
 
     /**
@@ -366,7 +395,7 @@
             inst.tempWgCount = 0;
             inst.tempQueryList = SELF.getTempWidgetQueryList();
             
-            inst.registeredWidgets = registeredWidgets || [];
+            SELF.glb.registeredWidgets = registeredWidgets || [];
 
 
 
@@ -442,28 +471,8 @@
             return uid;
         },
 
-        /**
-         * @description Removes the loading state from any registered widgets that are already loaded (using class stored in 'clsLoading' variable. Call this if you've got preloaded critical CSS.
-         * @param uid (string) - the UID for the instance of freeStyla, returned when calling the 'start' method.
-         */
-        removeCriticalCssLoad: function (uid) {
-            var $thisWg, inst = getInstance(uid);
-
-            _.forEach(inst.registeredWidgets, function (item) {
-
-                if (item.loaded && item.wgName !== "*") {
-
-                    $thisWg = $("." + item.wgName);
-                    //console.log("removeCriticalCssLoad", $thisWg, item.wgName);
-
-                    if ($thisWg.length) {
-                        
-                        // remove all instances' css hide class, so they become visible
-                        $thisWg.removeClass(clsLoading);
-                    }
-                }
-            });
-        }
+        
+        removeCriticalCssLoad: removeCriticalCssLoad
 
         /**
          * @description Listen for when a widget's CSS has loaded and trigger a callback. 
@@ -593,25 +602,26 @@
         }
 
         , testable: {
-        	getUID: getUID
-            , createNewInstance: createNewInstance
-            , getInstance: getInstance
-            , clearAllInstances: clearAllInstances
-            , callConfigCBs: callConfigCBs
-            , callNotVisibleList: callNotVisibleList
-            , triggerUnloadedCBs: triggerUnloadedCBs
-            , triggerRegisteredCallbacks: triggerRegisteredCallbacks
-            , getTempWidgetQueryList: getTempWidgetQueryList
-            , ensureStylesLoaded: ensureStylesLoaded
-            , startCSSLoading: startCSSLoading
+        	  getUID: getUID
+          , createNewInstance: createNewInstance
+          , getInstance: getInstance
+          , clearAllInstances: clearAllInstances
+          , callConfigCBs: callConfigCBs
+          , callNotVisibleList: callNotVisibleList
+          , triggerUnloadedCBs: triggerUnloadedCBs
+          , triggerRegisteredCallbacks: triggerRegisteredCallbacks
+          , getTempWidgetQueryList: getTempWidgetQueryList
+          , ensureStylesLoaded: ensureStylesLoaded
+          , startCSSLoading: startCSSLoading
+          , removeCriticalCssLoad: removeCriticalCssLoad
         }
 
         // maybe useful variables
         , vars: {
             NS: NS
-            , clsLoading: clsLoading
-            , MAIN_ID: MAIN_ID
-            , CSS_LOADED_EVT: CSS_LOADED_EVT
+          , clsLoading: clsLoading
+          , MAIN_ID: MAIN_ID
+          , CSS_LOADED_EVT: CSS_LOADED_EVT
         }
     }
 

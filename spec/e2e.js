@@ -397,7 +397,7 @@ describe("startCSSLoading", function() {
 		}
 	}
 
-	it("should trigger a 'freestyla-css-loaded' event if CSS file is already registered and loaded, returning true", function(done) {
+	it("should trigger a 'freestyla-css-loaded' event with 'isSuccess = true' if CSS file is already registered and loaded, returning true", function(done) {
 
 		var obj = setup(true)
 		$doc.on(window.freeStyla.vars.CSS_LOADED_EVT, function(evt, data) {
@@ -406,20 +406,22 @@ describe("startCSSLoading", function() {
 			done()
 		});
 
-		var isSuccess = fun(obj.uid, obj.wgName, obj.$wg)
+		var isAlreadyLoaded = fun(obj.uid, obj.wgName, obj.$wg)
 
 		 // this tells us that the file will not be loaded again because it is already registered and loaded
-		 expect(isSuccess).toBe(true)
+		 expect(isAlreadyLoaded).toBe(true)
 	})
+
+
 
 	it("should load a widget CSS file and mark the registered widget as loaded", function(done) {
 
 		var obj = setup(false)
 
-		var isSuccess = fun(obj.uid, obj.wgName, obj.$wg, false, function(_wgName, isSuccess) {
+		var isAlreadyLoaded = fun(obj.uid, obj.wgName, obj.$wg, false, function(wgName, isSuccess, cssFile) {
 
 		  	// just checks args are correct
-		  	expect(_wgName).toBe(obj.wgName);
+		  	expect(wgName).toBe(obj.wgName);
 			expect(isSuccess).toBe(true);
 			
 			// then checks only 1 item in registered widget list and that it is loaded
@@ -431,6 +433,68 @@ describe("startCSSLoading", function() {
 		  })
 
 		 // this tells us that the file will not be loaded again because it is already registered and loaded
-		 expect(isSuccess).toBe(false)
+		 expect(isAlreadyLoaded).toBe(false)
+	})
+
+	it("should load a widget css file and remove the loading state/class name from all elements that have it", function(done) {
+
+		var obj = setup(false)
+		var $wgs = $("."+obj.wgName)
+
+	  	expect($wgs.length).toBe(1)
+		expect($wgs.hasClass(clsLoading)).toBe(true)
+
+		var isAlreadyLoaded = fun(obj.uid, obj.wgName, obj.$wg, false, function(wgName, isSuccess, cssFile) {
+		  	expect($wgs.hasClass(clsLoading)).toBe(false)
+			done()
+		  })
+
+		 // this tells us that the file will not be loaded again because it is already registered and loaded
+		 expect(isAlreadyLoaded).toBe(false)
+	})
+
+	it("should load a temporary widget CSS file", function(done) {
+
+		var obj = setup(false)
+		  , useTempWg = true
+
+		var isAlreadyLoaded = fun(obj.uid, obj.wgName, obj.$wg, useTempWg, function(wgName, isSuccess, cssFile) {
+		  	// just checks args are correct
+		  	expect(wgName).toBe(obj.wgName);
+			expect(isSuccess).toBe(true);
+			expect(cssFile).toBe(window.freeStyla.glb.buildDirCSS + "TEMP_"+obj.wgName+".css")
+			done()
+		})
+		
+		expect(isAlreadyLoaded).toBe(false)
+	})
+})
+
+
+describe("removeCriticalCssLoad", function() {
+
+	var fun = window.freeStyla.testable.removeCriticalCssLoad
+	
+	it("should mark a widget as loaded, then call this function to have the loading state removed", function() {
+		var wgName = "siteheader"
+		
+		var wg = createWg(null, wgName)
+
+		// mark the widget as registered and loaded
+		var cnf = {
+			wgName: wgName
+			, loaded: true
+			, $el: null
+			, cb:[]
+		}
+
+		// Registers the widget
+        window.freeStyla.prepare([cnf]);
+
+        var uid = createNewInstance()
+
+        expect(wg.classList).toContain(clsLoading)
+        expect(fun(uid)).toBe(true)
+        expect(wg.classList).not.toContain(clsLoading)
 	})
 })

@@ -71,7 +71,7 @@
 
             // remove widgets added
             var wgs = document.querySelectorAll("[data-freestyla-wg]");
-            for(var i=0; i < wgs.length; i++) {
+            for(i=0; i < wgs.length; i++) {
                 document.body.removeChild(wgs[i]);
             }
 
