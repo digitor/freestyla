@@ -13,6 +13,7 @@
 
             var el = document.createElement(type);
             el.setAttribute("id", id);
+            el.setAttribute("data-freestyla-el", "")
 
             if(!container) container = document.body;
 

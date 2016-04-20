@@ -508,28 +508,39 @@ describe("checkLoadCssAttr", function() {
 
 	it("should return a jQuery element with 'data-load-wg' attribute containing a single matching widget name event with uppercase characters in it", function() {
 		
-		var wgName = "siteheader"
+		var id = getUID()
+		  , wgName = "siteHeader"// deliberate uppercase
 
-		var wg = createWg(null, wgName)
+		// element does not have to be a widget
+		var el = createEl(id)
+		el.setAttribute("data-load-wg", wgName)
 
-		wg.setAttribute("data-load-wg", "siteHeader")
-
+		// jQuery element should be returned
 		var $el = fun(wgName)
 		expect( $el ).toBeDefined();
 		expect( $el.length ).toEqual(1)
+		expect( $el.attr("id") ).toBe(id)
 	})
 
 	it("should return a jQuery element with 'data-load-wg' attribute containing a single matching widget when multiple exist in attribute", function() {
 		
-		var wgName = "siteheader"
+		var id = getUID()
+		  , wgName = "siteHeader"// deliberate uppercase
 
-		var wg = createWg(null, wgName)
+		// element does not have to be a widget
+		var el = createEl(id)
+		el.setAttribute("data-load-wg", "sitefooter " + wgName )
 
-		wg.setAttribute("data-load-wg", "sitefooter siteHeader")
-
+		// jQuery element should be returned
 		var $el = fun(wgName)
-		expect( $el ).toBeDefined();
+		expect( $el ).toBeDefined()
 		expect( $el.length ).toEqual(1)
+		expect( $el.attr("id") ).toBe(id)
+	})
+
+	it("should falsy if no attributes match", function() {
+		var $el = fun("siteheader")
+		expect( $el ).toBeFalsy()
 	})
 })
 
