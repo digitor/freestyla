@@ -544,3 +544,16 @@ describe("checkLoadCssAttr", function() {
 	})
 })
 
+
+describe("validateJQueryEl", function() {
+	// todo
+})
+
+
+describe("getPriorityConfig", function() {
+	// todo
+})
+
+describe("getRegConfig", function() {
+	// todo
+})

@@ -220,12 +220,110 @@
         // If passed 'wgName' has not yet been registered, marks it as loaded so future late registrations trigger callbacks immediately.
         var matches = _.where(registeredWidgets, { wgName: wgName });
         if (matches.length === 0) {
+            /*
             registeredWidgets.push({
                 wgName: wgName
                 , loaded: true
                 , cb: []
             });
+            */
+            var cnf = getRegConfig(wgName, true);
+            if(cnf) registeredWidgets.push(cnf);
         }
+    }
+
+
+    /**
+     * @description Checks that the widget name passed is a valid class name, just using basic characters.
+     * @param wgName (string) - Name of the widget. 
+     * @param beStrict (boolean) optional - Set to true if you need a falsy returned when widget name is invalid.
+     * @return (string/boolean) - If 'beStrict' is true, will return the name of the widget, forced to lowercase and allowing only numbers, hyphens and underscores, whether
+     *    successful or not. If 'beStrict' is falsy, will return null if the validation fails, but still return the widget name if successful, forced to lowercase.
+     */
+    function validateWidgetName(wgName, beStrict) {
+      wgName = wgName.toLowerCase();
+
+      var regex = /([a-z0-9-_])+/g;
+
+      console.log("hihi".match(regex))
+      return
+
+      if(regex.test(wgName)) {
+        console.warn(NS, "validateWidgetName", "Validation failed! Invalid widget name passed. Must contain letters, numbers, hyphens and underscores only." + 
+          "Invalid characters have been removed, but this may cause FreeStyla library to break.", wgName);
+        if(beStrict) return null;
+      }
+
+      return wgName.replace(regex, "");
+    }
+
+    /**
+     * @description Checks that a jQuery element is passed and that it has at least 1 instance on the page.
+     * @param $el (jQuery element) - Instance of jQuery element on the page.
+     * @return (boolean) - Pass (true) or fail (false).
+     */
+    function validateJQueryEl($el) {
+      if(!$el.jquery) {
+        console.warn(NS, "validateJQueryEl", "Validation failed! Element passed was not a jQuery element.", $el);
+        return false;
+      }
+
+      if($el.length === 0) {
+        console.warn(NS, "validateJQueryEl", "Validation failed! This jQuery element has a length of zero.", $el);
+        return false;
+      }
+
+      return true;
+    }
+
+    /**
+     * @description Gets a config object for priority loading of a widget, ensuring schema is correct.
+     * @param wgName (string) - Name of the widget. 
+     * @param isPriority (boolean) optional - Whether to mark widget for priorty loading. Defaults to false.
+     * @param $wg (jQuery element) optional - Instance on the page of the widget.
+     * @param useTempWg (boolean) optional - Whether to use "temp" widget CSS file. Defaults to false.
+     * @return (object) - Config object to use when registering a widget.
+     */
+    function getPriorityConfig(wgName, isPriority, $wg, useTempWg) {
+      
+      if(!wgName) {
+        console.warn(NS, "getPriorityConfig", "You must specify a 'wgName'. Returning early.");
+        return
+      }
+
+      if($wg && !validateJQueryEl($wg)) $wg = null;
+
+      return {
+          name: validateWidgetName(wgName)
+          , $wg: $wg || null
+          , useTempWg: !!useTempWg
+          , isPriority: !!isPriority
+      }
+    }
+
+    /**
+     * @description Gets a config object for registering the widget, ensuring schema is correct.
+     * @param wgName (string) - Name of the widget. 
+     * @param isLoaded (boolean) optional - Whether to mark widget as loaded. Defaults to false.
+     * @param $wg (jQuery element) optional - Instance on the page of the widget.
+     * @param cb (Array of Functions) optional - Array of callbacks to call when registered widget has loaded.
+     * @return (object) - Config object to use when registering a widget.
+     */
+    function getRegConfig(wgName, isLoaded, $wg, cb) {
+      
+      if(!wgName) {
+        console.warn(NS, "getRegConfig", "You must specify a 'wgName'. Returning early.");
+        return
+      }
+
+      if($wg && !validateJQueryEl($wg)) $wg = null;
+
+      return {
+          wgName: validateWidgetName(wgName)
+          , loaded: isLoaded
+          , $el: $wg
+          , cb: cb ? [cb] : []
+      }
     }
 
 
@@ -445,25 +543,29 @@
                 // check if widget exists on the page first
                 if ($thisWg.length !== 0) {
 
-                    wgLoadList.push({
+                    /*wgLoadList.push({
                         name: widgetName
                         , $wg: $thisWg
                         , useTempWg: useTempWg
                         , isPriority: isPriority
-                    });
+                    });*/
+
+                    wgLoadList.push(getPriorityConfig(widgetName, isPriority, $thisWg, useTempWg));
 
                 } else {
                     // then check for data attribute matches
                     var $attrMatch = SELF.checkLoadCssAttr(widgetName);
 
                     if ($attrMatch) { // looks for attributes that tell it to load first
-
+                        /*
                         wgLoadList.push({
-                            name: widgetName
-                            , $wg: $attrMatch
-                            , useTempWg: useTempWg
-                            , isPriority: isPriority
-                        });
+                          name: widgetName
+                          , $wg: $thisWg
+                          , useTempWg: useTempWg
+                          , isPriority: isPriority
+                        });*/
+
+                        wgLoadList.push(getPriorityConfig(widgetName, isPriority, $attrMatch, useTempWg));
                     }
                 }
             });
@@ -589,13 +691,19 @@
 
                 addNSArray(_.isArray(namespace) ? namespace : [namespace], function (wgName) {
 
+                    // TODO: validate this
                     // if ns isn't a string or array we assume it is an object with a jquery element and namespace
+
+                    /*
                     registeredWidgets.push({
                         wgName: wgName
                         , loaded: false
                         , $el: $el
                         , cb: [cb]
                     });
+                    */
+                    var cnf = getRegConfig(wgName, false, $el, [cb]);
+                    if(cnf) registeredWidgets.push(cnf);
                 });
 
                 return;
@@ -603,11 +711,15 @@
 
             
             addNSArray(list, function (wgName) {
+                /*
                 registeredWidgets.push({
                     wgName: wgName
                     , loaded: false
                     , cb: [cb]
                 });
+                */
+                var cnf = getRegConfig(wgName, false, null, [cb]);
+                if(cnf) registeredWidgets.push(cnf);
             });
         }
 
@@ -626,6 +738,10 @@
           , removeCriticalCssLoad: removeCriticalCssLoad
           , markWidgetAsPriority: markWidgetAsPriority
           , checkLoadCssAttr: checkLoadCssAttr
+          , validateWidgetName: validateWidgetName
+          , validateJQueryEl: validateJQueryEl
+          , getPriorityConfig: getPriorityConfig
+          , getRegConfig: getRegConfig
         }
 
         // maybe useful variables
