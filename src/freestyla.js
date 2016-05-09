@@ -241,12 +241,13 @@
      *    successful or not. If 'beStrict' is falsy, will return null if the validation fails, but still return the widget name if successful, forced to lowercase.
      */
     function validateWidgetName(wgName, beStrict) {
+  
+      var _wgName = wgName; // saves reference to original so it can be compared
+
       wgName = wgName.toLowerCase();
 
-      var regex = /([a-z0-9-_])+/g;
-
-      console.log("hihi".match(regex))
-      return
+      // matches anythiing not a-z, 0-9, a hyphen or an underscore, which will later be replaced by an empty string
+      var regex = /([^a-z0-9-_])/g;
 
       if(regex.test(wgName)) {
         console.warn(NS, "validateWidgetName", "Validation failed! Invalid widget name passed. Must contain letters, numbers, hyphens and underscores only." + 
@@ -254,7 +255,12 @@
         if(beStrict) return null;
       }
 
-      return wgName.replace(regex, "");
+      var result = wgName.replace(regex, "");
+
+      if(result !== _wgName && result === _wgName.toLowerCase())
+        console.warn(NS, "validateWidgetName", "Looks like some characters were uppercase and have been converted to lowercase", "'"+ _wgName +"' has become '"+ result +"'"  );
+
+      return result;
     }
 
     /**

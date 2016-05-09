@@ -99,14 +99,13 @@ describe("markWidgetAsPriority", function() {
 describe("validateWidgetName", function() {
 	var fun = freeStyla.testable.validateWidgetName
 
-	xit("should expect widget names to be valid despite case", function() {
+	it("should expect widget names to be valid despite case", function() {
 		expect(fun("siteheader", true)).toBe("siteheader");
 		expect(fun("SiteHeader", true)).toBe("siteheader");
 	})
 
 	it("should expect widget names to be invalid", function() {
-		fun("")
-		//expect(fun("site header", true)).toBe(null);
-		//expect(fun(".siteheader", true)).toBe(null);
+		expect(fun("site header", true)).toBe(null);
+		expect(fun(".siteheader", true)).toBe(null);
 	})
 })
