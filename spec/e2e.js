@@ -546,14 +546,18 @@ describe("checkLoadCssAttr", function() {
 
 
 describe("validateJQueryEl", function() {
-	// todo
-})
+	var fun = window.freeStyla.testable.validateJQueryEl
 
+	it("should pass if a valid jQuery element is supplied", function() {
+		expect(fun($(createEl()))).toBe(true)
+	})
 
-describe("getPriorityConfig", function() {
-	// todo
-})
+	it("should fail if a normal HTML element is supplied", function() {
+		expect(fun(createEl())).toBe(false)
+	})
 
-describe("getRegConfig", function() {
-	// todo
+	it("should fail if a jQuery element is supplied that has a length of zero", function() {
+		var $invalidEl = $(".something-that-doesnt-exist")
+		expect(fun($invalidEl)).toBe(false)
+	})
 })

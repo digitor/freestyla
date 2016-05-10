@@ -1,6 +1,9 @@
 var freeStyla = require("./../src/freestyla")
   , testUtils = require("./test-utils")
+  , getFakeJQueryEl = testUtils.getFakeJQueryEl
+  , noop = function(){}
 
+freeStyla.suppressWarnings = true;
 
 beforeEach(function() {
 	testUtils.reset(freeStyla);
@@ -106,6 +109,90 @@ describe("validateWidgetName", function() {
 
 	it("should expect widget names to be invalid", function() {
 		expect(fun("site header", true)).toBe(null);
-		expect(fun(".siteheader", true)).toBe(null);
+		expect(fun(".sitehea.der", true)).toBe(null);
+	})
+
+	it("should expect invalid widget name to be made valid when 'beStrict' is falsy", function() {
+		expect(fun("si.te head;e'r+")).toBe("siteheader");
+	})
+})
+
+
+describe("getPriorityConfig", function() {
+	var fun = freeStyla.testable.getPriorityConfig
+
+	it("should get a valid config object with all params supplied and valid", function() {
+		var $wg = getFakeJQueryEl()
+		  , result = fun("siteheader", $wg, true, true)
+
+		expect(result.name).toBe("siteheader")
+		expect(result.$wg).toBe($wg)
+		expect(result.isPriority).toBe(true)
+		expect(result.useTempWg).toBe(true)
+	})
+
+	it("should get a valid config object with 'isPriority' and 'isPriority' params omitted, which should default them to 'false', plus '$wg' omitted, which should default to 'null'.", function() {
+		var result = fun("siteheader")
+
+		expect(result.name).toBe("siteheader")
+		expect(result.$wg).toBe(null)
+		expect(result.isPriority).toBe(false)
+		expect(result.useTempWg).toBe(false)
+	})
+
+	it("should expect invalid widget name to be made valid", function() {
+		var result = fun(".s;it'eheader")
+		expect(result.name).toBe("siteheader")
+	})
+
+	it("should '$wg' to be 'null' when an invalid jQuery object is supplied", function() {
+		var result = fun("siteheader", { length: 0 })
+		expect(result.$wg).toBe(null)
+	})
+
+	it("should '$wg' to be 'null' when not supplied", function() {
+		var result = fun("siteheader")
+		expect(result.$wg).toBe(null)
+	})
+})
+
+
+// NOT WORKING YET
+describe("getRegConfig", function() {
+	var fun = freeStyla.testable.getRegConfig
+
+	it("should get a valid config object with all params supplied and valid", function() {
+		var $el = getFakeJQueryEl()
+		  , result = fun("siteheader", true, $el, noop)
+
+		 console.log(result)
+		expect(result.wgName).toBe("siteheader")
+		expect(result.loaded).toBe(true)
+		expect(result.$el).toBe($el)
+		expect(result.cb.length).toEqual(1)
+	})
+
+	it("should get a valid config object with 'loaded' param omitted, which should default it to 'false', plus '$el' omitted, which should default to 'null', and 'cb' omitted, which should default to an empty array.", function() {
+		var result = fun("siteheader")
+
+		expect(result.wgName).toBe("siteheader")
+		expect(result.loaded).toBe(false)
+		expect(result.$el).toBe(null)
+		expect(result.cb.length).toEqual(0)
+	})
+
+	it("should expect invalid widget name to be made valid", function() {
+		var result = fun(".s;it'eheader")
+		expect(result.wgName).toBe("siteheader")
+	})
+
+	it("should '$el' to be 'null' when an invalid jQuery object is supplied", function() {
+		var result = fun("siteheader", { length: 0 })
+		expect(result.$el).toBe(null)
+	})
+
+	it("should '$el' to be 'null' when not supplied", function() {
+		var result = fun("siteheader")
+		expect(result.$el).toBe(null)
 	})
 })

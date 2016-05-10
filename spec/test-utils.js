@@ -36,6 +36,14 @@
             return el;
         }
 
+        // should satisfy 'freeStyla.validateJQueryEl'. Useful for unit tests that don't need DOM, but have a jQuery element in them
+        , getFakeJQueryEl: function() {
+            return {
+                jquery: true,
+                length: 1
+            }
+        }
+
         // el can be an ID as well as an actual DOM element
         , cleanupElement: function(el) {
             if(typeof el === "string") el = document.getElementById(el);

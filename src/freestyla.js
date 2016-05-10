@@ -250,15 +250,19 @@
       var regex = /([^a-z0-9-_])/g;
 
       if(regex.test(wgName)) {
-        console.warn(NS, "validateWidgetName", "Validation failed! Invalid widget name passed. Must contain letters, numbers, hyphens and underscores only." + 
-          "Invalid characters have been removed, but this may cause FreeStyla library to break.", wgName);
+        if(!SELF.suppressWarnings) {
+          console.warn(NS, "validateWidgetName", "Validation failed! Invalid widget name passed. Must contain letters, numbers, hyphens and underscores only." + 
+            "Invalid characters have been removed, but this may cause FreeStyla library to break.", wgName);
+        }
         if(beStrict) return null;
       }
 
       var result = wgName.replace(regex, "");
 
-      if(result !== _wgName && result === _wgName.toLowerCase())
-        console.warn(NS, "validateWidgetName", "Looks like some characters were uppercase and have been converted to lowercase", "'"+ _wgName +"' has become '"+ result +"'"  );
+      if(result !== _wgName && result === _wgName.toLowerCase()) {
+        if(!SELF.suppressWarnings)
+          console.warn(NS, "validateWidgetName", "Looks like some characters were uppercase and have been converted to lowercase", "'"+ _wgName +"' has become '"+ result +"'"  );
+      }
 
       return result;
     }
@@ -270,12 +274,14 @@
      */
     function validateJQueryEl($el) {
       if(!$el.jquery) {
-        console.warn(NS, "validateJQueryEl", "Validation failed! Element passed was not a jQuery element.", $el);
+        if(!SELF.suppressWarnings)
+          console.warn(NS, "validateJQueryEl", "Validation failed! Element passed was not a jQuery element.", $el);
         return false;
       }
 
       if($el.length === 0) {
-        console.warn(NS, "validateJQueryEl", "Validation failed! This jQuery element has a length of zero.", $el);
+        if(!SELF.suppressWarnings)
+          console.warn(NS, "validateJQueryEl", "Validation failed! This jQuery element has a length of zero.", $el);
         return false;
       }
 
@@ -285,25 +291,34 @@
     /**
      * @description Gets a config object for priority loading of a widget, ensuring schema is correct.
      * @param wgName (string) - Name of the widget. 
-     * @param isPriority (boolean) optional - Whether to mark widget for priorty loading. Defaults to false.
      * @param $wg (jQuery element) optional - Instance on the page of the widget.
+     * @param isPriority (boolean) optional - Whether to mark widget for priorty loading. Defaults to false.
      * @param useTempWg (boolean) optional - Whether to use "temp" widget CSS file. Defaults to false.
      * @return (object) - Config object to use when registering a widget.
      */
-    function getPriorityConfig(wgName, isPriority, $wg, useTempWg) {
+    function getPriorityConfig(wgName, $wg, isPriority, useTempWg) {
+      // TODO: change name to wgName, so consistent with 'getRegConfig'
       
       if(!wgName) {
-        console.warn(NS, "getPriorityConfig", "You must specify a 'wgName'. Returning early.");
-        return
+        if(!SELF.suppressWarnings)
+          console.warn(NS, "getPriorityConfig", "You must specify a 'wgName'. Returning early.");
+        return null;
+      }
+
+      var validWgName = validateWidgetName(wgName);
+      if(!validWgName) {
+        if(!SELF.suppressWarnings)
+          console.warn(NS, "getPriorityConfig", "You're 'wgName' was invalid. Returning early.", wgName);
+        return null;
       }
 
       if($wg && !validateJQueryEl($wg)) $wg = null;
 
       return {
-          name: validateWidgetName(wgName)
+          name: validWgName
+          , isPriority: !!isPriority
           , $wg: $wg || null
           , useTempWg: !!useTempWg
-          , isPriority: !!isPriority
       }
     }
 
@@ -311,23 +326,32 @@
      * @description Gets a config object for registering the widget, ensuring schema is correct.
      * @param wgName (string) - Name of the widget. 
      * @param isLoaded (boolean) optional - Whether to mark widget as loaded. Defaults to false.
-     * @param $wg (jQuery element) optional - Instance on the page of the widget.
+     * @param $el (jQuery element) optional - Instance on the page of the widget.
      * @param cb (Array of Functions) optional - Array of callbacks to call when registered widget has loaded.
      * @return (object) - Config object to use when registering a widget.
      */
-    function getRegConfig(wgName, isLoaded, $wg, cb) {
+    function getRegConfig(wgName, isLoaded, $el, cb) {
+      // TODO: change $el to $wg, so consistent with 'getPriorityConfig'
       
       if(!wgName) {
-        console.warn(NS, "getRegConfig", "You must specify a 'wgName'. Returning early.");
-        return
+        if(!SELF.suppressWarnings)
+          console.warn(NS, "getRegConfig", "You must specify a 'wgName'. Returning early.");
+        return null;
       }
 
-      if($wg && !validateJQueryEl($wg)) $wg = null;
+      var validWgName = validateWidgetName(wgName);
+      if(!validWgName) {
+        if(!SELF.suppressWarnings)
+          console.warn(NS, "getRegConfig", "You're 'wgName' was invalid. Returning early.", wgName);
+        return null;
+      }
+
+      if($el && !validateJQueryEl($el)) $el = null;
 
       return {
-          wgName: validateWidgetName(wgName)
+          wgName: validWgName
           , loaded: isLoaded
-          , $el: $wg
+          , $el: $el
           , cb: cb ? [cb] : []
       }
     }
@@ -556,7 +580,7 @@
                         , isPriority: isPriority
                     });*/
 
-                    wgLoadList.push(getPriorityConfig(widgetName, isPriority, $thisWg, useTempWg));
+                    wgLoadList.push(getPriorityConfig(widgetName, $thisWg, isPriority, useTempWg));
 
                 } else {
                     // then check for data attribute matches
@@ -571,7 +595,7 @@
                           , isPriority: isPriority
                         });*/
 
-                        wgLoadList.push(getPriorityConfig(widgetName, isPriority, $attrMatch, useTempWg));
+                        wgLoadList.push(getPriorityConfig(widgetName, $attrMatch, isPriority, useTempWg));
                     }
                 }
             });
